@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import AdminLogin from './pages/admin/AdminLogin.jsx'
+import AdminLayout from './components/admin/AdminLayout.jsx'
+import AdminAccess from './components/admin/AdminAccess.jsx'
 
 export default function App() {
   const [pathname, setPathname] = useState(window.location.pathname)
@@ -10,26 +12,28 @@ export default function App() {
     return () => window.removeEventListener('popstate', updatePath)
   }, [])
 
-  function navigate(path) {
-    window.history.replaceState(null, '', path)
+  const navigate = useCallback((path, { replace = false } = {}) => {
+    window.history[replace ? 'replaceState' : 'pushState'](null, '', path)
     setPathname(path)
-  }
+  }, [])
 
   if (pathname === '/admin/login') {
-    return <AdminLogin onAuthenticated={() => navigate('/admin/videos')} />
+    return <AdminLogin onAuthenticated={() => navigate('/admin/videos', { replace: true })} />
   }
 
-  // Replace with the real protected video-management page in the next step.
-  // This placeholder contains no administrator data and grants no access.
-  if (pathname === '/admin/videos') {
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
     return (
-      <main className="login-page">
-        <section className="login-card">
-          <h1>영상 관리</h1>
-          <p>영상 관리 화면은 준비 중입니다.</p>
-          <a className="login-home" href="/">사용자 화면으로 돌아가기</a>
-        </section>
-      </main>
+      <AdminAccess navigate={navigate}>
+        <AdminLayout pathname={pathname} navigate={navigate}>
+          <section className="admin-placeholder" aria-label="페이지 준비 안내">
+            <p>{pathname === '/admin/courses'
+              ? '학습과정 관리 화면을 준비하고 있습니다.'
+              : pathname === '/admin/videos' || pathname === '/admin'
+                ? '영상 관리 화면을 준비하고 있습니다.'
+                : '페이지를 찾을 수 없습니다.'}</p>
+          </section>
+        </AdminLayout>
+      </AdminAccess>
     )
   }
 
