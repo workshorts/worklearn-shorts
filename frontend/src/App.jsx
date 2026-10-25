@@ -54,6 +54,7 @@ export default function App() {
       <h1>스킬클립</h1>
       <p>사용자 화면은 준비 중입니다.</p>
       <a href="/admin/login">관리자 로그인</a>
+      <p><a href="/admin/videos">관리자 화면</a> — 로그인 기능 준비 중이므로 이 링크로 접속해 주세요.</p>
     </main>
   )
 }
