@@ -14,7 +14,7 @@ function Icon({ logout = false }) {
   </svg>
 }
 
-export default function AdminLayout({ pathname, navigate, children }) {
+export default function AdminLayout({ pathname, navigate, children, showHeading = true }) {
   const [loggingOut, setLoggingOut] = useState(false)
   const [error, setError] = useState('')
   const submitting = useRef(false)
@@ -64,7 +64,7 @@ export default function AdminLayout({ pathname, navigate, children }) {
       </aside>
       <main className="admin-main" id="admin-content" tabIndex={-1}>
         <div className="admin-content">
-          <header className="admin-heading"><h1 tabIndex={-1} ref={titleRef}>{active?.title || '페이지를 찾을 수 없습니다'}</h1></header>
+          {showHeading && <header className="admin-heading"><h1 tabIndex={-1} ref={titleRef}>{active?.title || '페이지를 찾을 수 없습니다'}</h1></header>}
           {children}
         </div>
       </main>
