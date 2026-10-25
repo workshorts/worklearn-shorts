@@ -150,3 +150,11 @@ vite.config.ts.timestamp-*
 
 # macOS Finder metadata
 .DS_Store
+
+# Local task notes and generated reports
+/backend/read.md
+문서_종합분석.md
+백엔드2_원자적_실행계획.md
+
+# Local IDE settings
+/.idea/
