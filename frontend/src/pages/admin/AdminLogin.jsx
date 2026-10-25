@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { getAdmin, loginAdmin } from '../../api/adminApi.js';
 import './login.css';
 
@@ -16,30 +16,16 @@ export default function AdminLogin({ onAuthenticated, homeHref = '/' }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [visible, setVisible] = useState(false);
-  const [status, setStatus] = useState('checking');
+  const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [fields, setFields] = useState({});
   const usernameRef = useRef(null);
   const passwordRef = useRef(null);
   const submitting = useRef(false);
-  const onAuthenticatedRef = useRef(onAuthenticated);
-  onAuthenticatedRef.current = onAuthenticated;
-
-  useEffect(() => {
-    const controller = new AbortController();
-    getAdmin(controller.signal)
-      .then(() => onAuthenticatedRef.current())
-      .catch((err) => {
-        if (controller.signal.aborted) return;
-        if (err.status !== 401) setError(err.message);
-        setStatus('idle');
-      });
-    return () => controller.abort();
-  }, []);
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (submitting.current || status === 'checking') return;
+    if (submitting.current) return;
     const nextFields = {
       username: username.trim() ? '' : '아이디를 입력해 주세요.',
       password: password ? '' : '비밀번호를 입력해 주세요.',
@@ -56,7 +42,7 @@ export default function AdminLogin({ onAuthenticated, homeHref = '/' }) {
       await loginAdmin(username.trim(), password);
       await getAdmin(); // Confirm the HttpOnly session cookie actually works.
       setPassword('');
-      onAuthenticatedRef.current();
+      onAuthenticated();
     } catch (err) {
       setError(err.message);
       if (err.fields && typeof err.fields === 'object' && !Array.isArray(err.fields)) {
@@ -100,7 +86,7 @@ export default function AdminLogin({ onAuthenticated, homeHref = '/' }) {
           {fields.password && <p id="password-error" className="field-error">{fields.password}</p>}
           {error && <p className="form-error" role="alert">{error}</p>}
           <button className="primary-button login-submit" type="submit" disabled={busy}>
-            <span aria-live="polite">{status === 'checking' ? '로그인 상태 확인 중…' : status === 'submitting' ? '로그인 중…' : '로그인'}</span>
+            <span aria-live="polite">{status === 'submitting' ? '로그인 중…' : '로그인'}</span>
             {!busy && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="false">
               <path d="M4 12h16m-6-6 6 6-6 6" />
             </svg>}
