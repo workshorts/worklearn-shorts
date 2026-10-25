@@ -20,13 +20,21 @@ export default function App() {
     setPathname(path)
   }, [])
 
+  useEffect(() => {
+    if (pathname === '/admin' || pathname === '/admin/') {
+      window.location.replace('/admin/videos')
+    }
+  }, [pathname])
+
+  if (pathname === '/admin' || pathname === '/admin/') return null
+
   if (pathname === '/admin/login') {
     return <AdminLogin onAuthenticated={() => navigate('/admin/videos', { replace: true })} />
   }
 
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
     const editing = pathname.match(/^\/admin\/videos\/([1-9]\d*)\/edit$/)
-    const videos = pathname === '/admin/videos' || pathname === '/admin'
+    const videos = pathname === '/admin/videos'
     const creating = pathname === '/admin/videos/new'
     const courses = pathname === '/admin/courses'
     return (
