@@ -1,0 +1,49 @@
+.admin-shell, .admin-access { font-family: 'Noto Sans KR', 'Malgun Gothic', Arial, sans-serif; color: #111a2b; font-synthesis: none; }
+.admin-shell, .admin-shell *, .admin-access, .admin-access * { box-sizing: border-box; }
+.admin-shell { --sidebar-width: 216px; min-height: 100vh; min-height: 100dvh; background: #f6f8fc; }
+.admin-shell a { color: inherit; text-decoration: none; }
+.admin-shell button, .admin-access button { font: inherit; cursor: pointer; }
+.admin-shell svg { width: 20px; height: 20px; flex-shrink: 0; }
+.admin-shell a:focus-visible, .admin-shell button:focus-visible, .admin-access a:focus-visible, .admin-access button:focus-visible { outline: 3px solid #8495ff; outline-offset: 4px; }
+.admin-skip-link { position: fixed; left: 12px; top: -80px; z-index: 10; padding: 12px 18px; background: white; border-radius: 6px; }
+.admin-skip-link:focus { top: 12px; }
+.admin-sidebar { position: fixed; inset: 0 auto 0 0; width: var(--sidebar-width); display: flex; flex-direction: column; overflow-y: auto; background: linear-gradient(130deg, #1c2530, #19232d); color: #f5f6f9; border-right: 1px solid #3b4859; }
+.admin-wordmark { padding: 22px 27px 36px; font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+.admin-sidebar nav { display: flex; flex-direction: column; }
+.admin-sidebar nav a { padding: 17px 27px; border-radius: 5px 0 0 5px; font-size: 18px; letter-spacing: -.4px; }
+.admin-sidebar nav a:hover { background: #ffffff08; }
+.admin-sidebar nav a.active { background: linear-gradient(100deg, #344253, #2d3949); font-weight: 700; }
+.admin-sidebar-bottom { margin-top: auto; padding: 20px 20px 26px; }
+.admin-view-site { display: flex; align-items: center; gap: 9px; margin-bottom: 17px; padding-left: 6px; font-size: 12px; color: #a8b5c7 !important; }
+.admin-view-site svg { width: 17px; height: 17px; }
+.admin-logout { width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 17px; border: 1px solid #3d5067; border-radius: 7px; color: inherit; background: transparent; text-align: left; font-size: 16px !important; }
+.admin-logout:hover:not(:disabled) { background: #ffffff08; }
+.admin-logout:disabled { opacity: .65; cursor: wait; }
+.admin-logout-error { color: #ffb9c1; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.admin-main { margin-left: var(--sidebar-width); padding: 48px 36px 38px; min-height: 100vh; min-height: 100dvh; min-width: 0; }
+.admin-content { max-width: 1240px; margin-inline: auto; }
+.admin-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.admin-heading h1 { margin: 0; font-size: 32px; font-weight: 800; line-height: 1.5; letter-spacing: -1.2px; }
+.admin-heading h1:focus { outline: none; }
+.admin-placeholder { min-height: 200px; display: grid; align-content: center; justify-items: center; gap: 12px; padding: 28px; border: 1px solid #dfe5ef; border-radius: 9px; background: white; color: #60718e; text-align: center; line-height: 1.7; }
+.admin-placeholder p { margin: 0; }
+.admin-preview-note { margin: 0 0 20px; color: #60718e; font-size: 12px; line-height: 1.6; }
+.admin-access { min-height: 100dvh; display: grid; place-items: center; background: #f6f8fc; padding: 24px; }
+.admin-access section { max-width: 480px; text-align: center; line-height: 1.8; }
+.admin-access button { border: 1px solid #d2ddec; padding: 9px 16px; border-radius: 6px; background: white; margin-right: 16px; }
+.admin-access a { color: #3159bc; }
+@media (max-width: 767px) {
+  .admin-sidebar { position: relative; width: 100%; display: block; overflow: visible; }
+  .admin-wordmark { display: block; font-size: 21px; padding: 17px 18px; padding-right: 140px; }
+  .admin-sidebar nav { flex-direction: row; border-top: 1px solid #ffffff0d; }
+  .admin-sidebar nav a { flex: 1; padding: 14px 12px; font-size: 14px; border-radius: 0; text-align: center; }
+  .admin-sidebar-bottom { position: absolute; right: 14px; top: 14px; padding: 0; }
+  .admin-view-site { display: none; }
+  .admin-logout { width: auto; padding: 8px 10px; gap: 7px; font-size: 12px !important; }
+  .admin-logout svg { width: 17px; height: 17px; }
+  .admin-logout-error { position: absolute; top: 38px; right: 0; width: min(280px, 85vw); background: #19232d; padding: 12px; border-radius: 6px; z-index: 2; }
+  .admin-main { margin: 0; padding: 24px 15px; min-height: calc(100dvh - 112px); }
+  .admin-heading { margin-bottom: 20px; gap: 10px; }
+  .admin-heading h1 { font-size: 26px; letter-spacing: -1px; }
+  .admin-placeholder { min-height: 180px; padding: 20px; font-size: 14px; }
+}

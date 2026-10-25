@@ -53,3 +53,4 @@ export async function adminRequest(path, { signal, ...options } = {}) {
 export const getAdmin = (signal) => adminRequest('me', { signal });
 export const loginAdmin = (username, password) =>
   adminRequest('login', { method: 'POST', body: JSON.stringify({ username, password }) });
+export const logoutAdmin = () => adminRequest('logout', { method: 'POST' });
