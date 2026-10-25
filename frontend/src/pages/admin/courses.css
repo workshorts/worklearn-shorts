@@ -1,0 +1,55 @@
+.ac-heading p { margin: 7px 0 0; font-size: 13px; color: #748198; line-height: 1.7; }
+.ac-course-list { display: grid; gap: 14px; }
+.ac-course-card { display: grid; grid-template-columns: minmax(0,1fr) 100px 110px 100px; align-items: center; gap: 16px; min-height: 110px; padding: 22px 24px; background: white; border: 1px solid #dfe5ef; border-radius: 9px; }
+.ac-course-description { min-width: 0; overflow-wrap: anywhere; }
+.ac-course-description h2 { margin: 0 0 6px; font-size: 18px; font-weight: 700; line-height: 1.5; letter-spacing: -.5px; }
+.ac-course-description p { margin: 0; font-size: 13px; line-height: 1.7; color: #75839a; white-space: pre-wrap; }
+.ac-course-count { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #62718a; white-space: nowrap; }
+.ac-course-count svg { width: 23px; height: 23px; padding: 4px; background: #edf1f7; border-radius: 50%; color: #8290a7; }
+.ac-course-card .av-button { gap: 7px; font-size: 13px; }
+.ac-course-card .av-button svg { width: 17px; height: 17px; }
+.ac-course-card .ac-edit { color: #5371c7; border-color: #d5e1fa; background: #f2f6ff; }
+.ac-course-card .ac-delete { color: #63738b; }
+.av-modal.ac-editor { max-width: 860px; padding: 30px; }
+.ac-form > label { display: block; margin: 20px 0 8px; font-size: 14px; font-weight: 600; }
+.ac-form em { color: #df4560; font-style: normal; }
+.ac-form textarea { box-sizing: border-box; width: 100%; min-height: 84px; resize: vertical; padding: 12px 14px; font: inherit; color: #1b293d; border: 1px solid #d6deea; border-radius: 6px; line-height: 1.6; }
+.ac-form textarea:focus { outline: 2px solid #a7b3ff; outline-offset: 1px; border-color: #667deb; }
+.ac-form [aria-invalid=true] { border-color: #d84054; }
+.ac-description-count { display: block; text-align: right; margin-top: 3px; color: #7a889c; font-size: 11px; }
+.ac-builder { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 18px; margin-top: 20px; }
+.ac-builder-panel { border: 1px solid #e0e6f0; border-radius: 8px; background: #fafbfe; min-width: 0; overflow: hidden; }
+.ac-builder-panel h3 { font-size: 14px; margin: 0; padding: 13px 15px; border-bottom: 1px solid #e0e6f0; background: #f1f4f9; }
+.ac-builder-panel h3 span { margin-left: 7px; color: #667cba; font-size: 12px; font-weight: 400; }
+.ac-builder-items { max-height: 270px; min-height: 150px; overflow-y: auto; overscroll-behavior: contain; margin: 0; padding: 10px; list-style: none; }
+.ac-builder-video { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 12px 10px; border: 1px solid #e0e6f0; border-radius: 6px; background: white; }
+.ac-builder-video:last-child { margin-bottom: 0; }
+.ac-builder-video > span:not(.ac-order-number) { min-width: 0; flex: 1; font-size: 13px; overflow-wrap: anywhere; line-height: 1.6; }
+.ac-builder-video small { display: block; color: #8490a5; font-size: 11px; margin-top: 3px; }
+.ac-icon-button { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 28px; height: 30px; padding: 0; border: 1px solid #dce3ee; background: #fff; border-radius: 5px; color: #63799c; font-size: 18px; line-height: 1; }
+.ac-icon-button:hover:not(:disabled) { background: #eef3ff; color: #3958eb; }
+.ac-icon-button:disabled { opacity: .3; }
+.ac-order-actions { display: flex; gap: 4px; }
+.ac-order-number { flex-shrink: 0; width: 22px; height: 22px; line-height: 22px; border-radius: 50%; text-align: center; font-size: 11px; color: #5670b3; background: #eef2fb; }
+.ac-builder-empty { text-align: center; color: #8490a5; font-size: 12px; padding: 28px 14px; line-height: 1.8; margin: 0; }
+.ac-builder-empty .av-button { white-space: normal; }
+.ac-builder-pagination { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px; border-top: 1px solid #e0e6f0; font-size: 11px; color: #75839a; }
+@media (max-width: 1100px) {
+  .ac-course-card { grid-template-columns: minmax(0,1fr) 110px 100px; }
+  .ac-course-description { grid-column: 1 / -1; }
+}
+@media (max-width: 767px) {
+  .ac-heading { align-items: flex-start; flex-wrap: wrap; }
+  .ac-heading h1 { font-size: 24px; }
+  .ac-heading p { font-size: 12px; }
+  .ac-course-card { padding: 18px 16px; gap: 12px 8px; grid-template-columns: minmax(0,1fr) 98px 80px; }
+  .ac-course-description h2 { font-size: 17px; }
+  .ac-course-card .av-button { padding: 9px; font-size: 12px; }
+  .ac-course-count { gap: 4px; font-size: 12px; }
+  .ac-course-count svg { width: 19px; height: 19px; }
+  .av-modal.ac-editor { padding: 24px 18px; }
+  .ac-form textarea { font-size: 16px; }
+  .ac-builder { grid-template-columns: minmax(0,1fr); gap: 14px; }
+  .ac-builder-items { min-height: 90px; max-height: 200px; }
+  .ac-builder-video { padding: 9px; }
+}
