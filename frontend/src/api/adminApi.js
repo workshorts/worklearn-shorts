@@ -6,26 +6,26 @@ export class ApiError extends Error {
   }
 }
 
-export async function adminRequest(path, { signal, ...options } = {}) {
+export async function adminRequest(path, { signal, timeoutMs = 25_000, ...options } = {}) {
   const controller = new AbortController();
   const abort = () => controller.abort();
   if (signal?.aborted) abort();
   signal?.addEventListener('abort', abort, { once: true });
-  const timeout = setTimeout(abort, 25_000);
+  const timeout = setTimeout(abort, timeoutMs);
   try {
-    const response = await fetch(`/api/admin/${path}`, {
+    const response = await fetch(path.startsWith('/') ? path : `/api/admin/${path}`, {
       ...options,
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json', ...options.headers },
+      headers: { ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...options.headers },
       signal: controller.signal,
     });
     const isJson = response.headers.get('content-type')?.includes('application/json');
     const data = isJson ? await response.json() : null;
     if (!response.ok) {
       const message =
-        response.status === 401 ? '아이디 또는 비밀번호를 확인해 주세요.' :
+        response.status === 401 ? (path === 'login' ? '아이디 또는 비밀번호를 확인해 주세요.' : '로그인이 만료되었습니다. 다시 로그인해 주세요.') :
         response.status === 403 ? '관리자 접근 권한이 없습니다.' :
-        response.status === 429 ? '로그인 시도가 많습니다. 잠시 후 다시 시도해 주세요.' :
+        response.status === 429 ? '요청이 많습니다. 잠시 후 다시 시도해 주세요.' :
         response.status >= 500 ? '서버가 준비 중이거나 응답하지 않습니다. 잠시 후 다시 시도해 주세요.' :
         data?.message || '요청을 처리하지 못했습니다. 다시 시도해 주세요.';
       throw new ApiError(message, response.status, data?.fields);
