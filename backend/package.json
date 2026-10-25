@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "db:init": "node db/init.js"
+    "db:init": "node db/init.js",
+    "test": "node --test --test-reporter=spec --test-concurrency=1 \"test/**/*.test.js\"",
+    "test:db": "node --test --test-reporter=spec --test-concurrency=1 \"test/db/*.test.js\""
   },
   "engines": {
     "node": ">=22.20.0"
