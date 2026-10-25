@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
+
+.login-page { font-family: 'Noto Sans KR', 'Malgun Gothic', Arial, sans-serif; color: #192339; font-synthesis: none; }
+.login-page, .login-page * { box-sizing: border-box; }
+.login-page button, .login-page input { font: inherit; }
+.login-page button, .login-page a { -webkit-tap-highlight-color: transparent; }
+.login-page a { color: inherit; text-decoration: none; }
+.login-page button { cursor: pointer; }
+.login-page button:disabled { cursor: wait; opacity: .65; }
+.login-page button:focus-visible, .login-page a:focus-visible { outline: 3px solid #7b86ff; outline-offset: 4px; }
+.login-page { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 100px 18px 50px; background: radial-gradient(ellipse at 50% 25%, #eef1ff, transparent 65%), #f8fafc; }
+.login-brand { position: absolute; top: 29px; left: 36px; font-size: 28px; font-weight: 900; letter-spacing: -1.5px; }
+.login-card { width: 400px; max-width: 100%; padding: 32px; border: 1px solid #e7ebf5; border-radius: 16px; background: #fff; box-shadow: 0 10px 50px #25358a09; text-align: center; }
+.login-card h1 { margin: 0 0 8px; font-size: 24px; font-weight: 800; letter-spacing: -1px; }
+.login-card > p { margin: 0; color: #8b96a9; font-size: 14px; }
+.login-card form { margin-top: 24px; text-align: left; }
+.login-card label { display: block; margin: 16px 0 8px; font-size: 13px; font-weight: 600; }
+.login-card input { width: 100%; min-width: 0; height: 44px; padding: 11px 13px; border: 1px solid #d2ddef; border-radius: 8px; background: #fff; color: #142039; font-size: 14px; outline: none; }
+.login-card input::placeholder { color: #a5afc1; }
+.login-card input:focus { border-color: #6f91ff; box-shadow: 0 0 0 3px #5361ff15; }
+.login-card input[aria-invalid="true"] { border-color: #ca3b45; }
+.password-control { position: relative; }
+.password-control input { padding-right: 48px; }
+.password-toggle { position: absolute; right: 1px; top: 0; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; color: #8b96a9; border: 0; border-radius: 7px; background: transparent; }
+.password-toggle svg { width: 20px; height: 20px; }
+.login-page .primary-button { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 11px 44px; border: 1px solid transparent; border-radius: 7px; background: #0e5cff; color: #fff; font-size: 15px; font-weight: 600; }
+.login-page .primary-button:hover:not(:disabled) { background: #004ee5; }
+/* Center the text against the full button, independent of the trailing icon. */
+.login-submit { position: relative; width: 100%; margin-top: 22px; justify-content: center; text-align: center; }
+.login-submit svg { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; }
+.login-home { display: inline-block; margin-top: 25px; color: #687891; font-size: 12px; }
+.login-home:hover { color: #5361ff; }
+.field-error, .form-error { color: #b42332; font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.field-error { margin: 6px 0 0; }
+.form-error { margin: 16px 0 0; }
+.login-card .success-note { margin-top: 18px; line-height: 1.7; }
+@media (max-width: 767px) {
+  .login-brand { top: 22px; left: 24px; font-size: 27px; }
+  .login-card { padding: 30px 26px 25px; }
+  .login-card > p { font-size: 13px; }
+  .login-card input { font-size: 16px; }
+}
+@media (max-width: 360px) {
+  .login-card { padding-right: 20px; padding-left: 20px; }
+  .login-page .primary-button { padding-right: 30px; padding-left: 30px; font-size: 14px; }
+  .login-submit svg { right: 12px; }
+}
