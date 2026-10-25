@@ -158,3 +158,6 @@ vite.config.ts.timestamp-*
 
 # Local IDE settings
 /.idea/
+
+# Local documents and temporary artifacts
+/tmp/
