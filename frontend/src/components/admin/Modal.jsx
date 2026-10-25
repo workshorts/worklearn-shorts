@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
-export default function Modal({ title, children, onClose, busy = false }) {
+export default function Modal({ title, children, onClose, busy = false, className = '' }) {
   const ref = useRef(null)
   const titleId = useId()
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function Modal({ title, children, onClose, busy = false }) {
     else if (!event.shiftKey && (document.activeElement === last || document.activeElement === ref.current)) { event.preventDefault(); first.focus() }
   }
   return createPortal(<div className="av-modal-backdrop" onClick={(event) => { if (event.target === event.currentTarget && !busy) onClose() }}>
-    <section className="av-modal" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-busy={busy} ref={ref} tabIndex={-1} onKeyDown={keyDown}>
+    <section className={`av-modal ${className}`} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-busy={busy} ref={ref} tabIndex={-1} onKeyDown={keyDown}>
       <h2 id={titleId}>{title}</h2>
       <button type="button" className="av-modal-close" aria-label="닫기" disabled={busy} onClick={onClose}>×</button>
       {children}
