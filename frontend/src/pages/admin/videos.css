@@ -6,6 +6,7 @@
 .av-button.av-danger { color: #c63d51; border-color: #f0cad0; background: #fff5f6; }
 .av-button.av-danger:hover:not(:disabled) { background: #ffe5e9; }
 .av-button.av-small { min-height: 32px; padding: 6px 12px; font-size: 13px; }
+.admin-heading > .av-button { width: 156px; height: 42px; flex-shrink: 0; font-size: 14px; font-weight: 500; }
 .av-button:disabled, .av-modal button:disabled { opacity: .45; cursor: not-allowed; }
 .av-actions, .av-inline { display: flex; gap: 8px; align-items: center; }
 .av-table-scroll { overflow-x: auto; border: 1px solid #dde4ee; border-radius: 8px; background: white; }
@@ -121,5 +122,5 @@ p.av-hint { margin: 8px 0 0; }
   .av-modal-backdrop { padding: 14px; }
   .av-modal { padding: 24px 20px; }
   .av-video-table td, .av-video-table th { padding: 14px 12px; }
-  .admin-heading > .av-button { font-size: 12px; padding: 9px 12px; }
+  .admin-heading > .av-button { width: 140px; height: 40px; font-size: 12px; padding: 9px 12px; }
 }
