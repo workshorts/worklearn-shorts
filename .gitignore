@@ -161,3 +161,10 @@ vite.config.ts.timestamp-*
 
 # Local documents and temporary artifacts
 /tmp/
+# Backend local database and uploaded files
+backend/data/*.db
+backend/data/*.db-journal
+backend/data/*.db-wal
+backend/data/*.db-shm
+backend/uploads/
+*:Zone.Identifier

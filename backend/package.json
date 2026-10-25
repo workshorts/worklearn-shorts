@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "db:init": "node db/init.js",
     "test": "node --test --test-reporter=spec --test-concurrency=1 \"test/**/*.test.js\"",
-    "test:db": "node --test --test-reporter=spec --test-concurrency=1 \"test/db/*.test.js\""
+    "test:db": "node --test --test-reporter=spec --test-concurrency=1 \"test/db/*.test.js\"",
+    "admin:create": "node scripts/create-admin.js"
   },
   "engines": {
     "node": ">=22.20.0"
