@@ -4,6 +4,7 @@ import AdminLayout from './components/admin/AdminLayout.jsx'
 import AdminAccess from './components/admin/AdminAccess.jsx'
 import AdminVideos from './pages/admin/AdminVideos.jsx'
 import AdminVideoForm from './pages/admin/AdminVideoForm.jsx'
+import AdminCourses from './pages/admin/AdminCourses.jsx'
 
 export default function App() {
   const [pathname, setPathname] = useState(window.location.pathname)
@@ -27,15 +28,12 @@ export default function App() {
     const editing = pathname.match(/^\/admin\/videos\/([1-9]\d*)\/edit$/)
     const videos = pathname === '/admin/videos' || pathname === '/admin'
     const creating = pathname === '/admin/videos/new'
+    const courses = pathname === '/admin/courses'
     return (
       <AdminAccess navigate={navigate}>
-        <AdminLayout pathname={pathname} navigate={navigate} showHeading={!videos && !creating && !editing}>
-          {videos ? <AdminVideos navigate={navigate} /> : creating || editing ? <AdminVideoForm key={pathname} id={editing ? Number(editing[1]) : undefined} navigate={navigate} /> : <section className="admin-placeholder" aria-label="페이지 준비 안내">
-            <p>{pathname === '/admin/courses'
-              ? '학습과정 관리 화면을 준비하고 있습니다.'
-              : pathname === '/admin/videos' || pathname === '/admin'
-                ? '영상 관리 화면을 준비하고 있습니다.'
-                : '페이지를 찾을 수 없습니다.'}</p>
+        <AdminLayout pathname={pathname} navigate={navigate} showHeading={!videos && !creating && !editing && !courses}>
+          {courses ? <AdminCourses navigate={navigate} /> : videos ? <AdminVideos navigate={navigate} /> : creating || editing ? <AdminVideoForm key={pathname} id={editing ? Number(editing[1]) : undefined} navigate={navigate} /> : <section className="admin-placeholder" aria-label="페이지 준비 안내">
+            <p>페이지를 찾을 수 없습니다.</p>
           </section>}
         </AdminLayout>
       </AdminAccess>
