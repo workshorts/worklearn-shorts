@@ -12,6 +12,15 @@ let videos = titles.map((title, i) => ({
 }))
 let nextId = 9
 let nextTagId = 7
+let courses = [
+  { id: 1, name: '실무 엑셀 기초', description: '실무에서 자주 사용하는 엑셀 기능을 기초부터 차근차근 학습합니다.', videoIds: [1] },
+  { id: 2, name: '웹 개발 입문', description: '웹 개발의 기본 개념과 흐름을 배웁니다.', videoIds: [2, 5] },
+  { id: 3, name: '업무 자동화 입문', description: '반복되는 업무를 자동화하여 효율적으로 일하는 방법을 배웁니다.', videoIds: [3] },
+  { id: 4, name: '직장인 비즈니스 매너', description: '직장 생활에 필요한 비즈니스 매너와 커뮤니케이션을 배웁니다.', videoIds: [4, 8] },
+  { id: 5, name: '직장인을 위한 IT 기초', description: '업무에 필요한 IT 기본 지식을 배웁니다.', videoIds: [5] },
+  { id: 6, name: '기획안 · 보고서 작성법', description: '설득력 있는 기획안과 보고서를 작성하는 방법을 배웁니다.', videoIds: [6, 7] },
+].map((course) => ({ ...course, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }))
+let nextCourseId = 7
 const uploads = new Map()
 const copy = (value) => structuredClone(value)
 async function delay(signal) {
@@ -66,4 +75,35 @@ export async function deleteVideo(id) {
     if (uploads.has(path)) { URL.revokeObjectURL(uploads.get(path)); uploads.delete(path) }
   }
   videos = videos.filter((v) => v.id !== Number(id))
+  courses.forEach((course) => { course.videoIds = course.videoIds.filter((videoId) => videoId !== Number(id)) })
+}
+
+const courseSummary = ({ videoIds, ...course }) => copy({ ...course, videoCount: videoIds.length })
+const courseDetail = (course) => ({ ...courseSummary(course), videos: course.videoIds.map((id, index) => ({ ...dto(find(id)), sortOrder: index + 1 })) })
+function findCourse(id) {
+  const course = courses.find((course) => course.id === Number(id))
+  if (!course) throw new ApiError('학습과정을 찾을 수 없습니다.', 404)
+  return course
+}
+export async function getCourses(page, signal) {
+  await delay(signal)
+  return { data: courses.slice((page - 1) * 20, page * 20).map(courseSummary), page, limit: 20, total: courses.length }
+}
+export async function getCourse(id, signal) { await delay(signal); return courseDetail(findCourse(id)) }
+export async function saveCourse(id, data) {
+  await delay()
+  const name = data.name.trim()
+  if (name.length < 2 || name.length > 50 || data.description.length > 300) throw new ApiError('학습과정 이름과 설명을 확인해 주세요.', 400)
+  if (!data.videoIds.length || new Set(data.videoIds).size !== data.videoIds.length || data.videoIds.some((id) => !videos.some((video) => video.id === id))) {
+    throw new ApiError('중복 없이 영상을 1개 이상 선택해 주세요. 삭제된 영상이 있는지 확인해 주세요.', 400)
+  }
+  const old = id ? findCourse(id) : null
+  const course = { ...(old || { id: nextCourseId++, createdAt: new Date().toISOString() }), name, description: data.description, videoIds: [...data.videoIds], updatedAt: new Date().toISOString() }
+  if (old) courses = courses.map((item) => item.id === course.id ? course : item)
+  else courses.unshift(course)
+  return courseDetail(course)
+}
+export async function deleteCourse(id) {
+  await delay(); findCourse(id)
+  courses = courses.filter((course) => course.id !== Number(id))
 }
