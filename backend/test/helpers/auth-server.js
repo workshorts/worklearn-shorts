@@ -19,6 +19,9 @@ export async function startAuthServer(t, options = {}) {
   const { app } = await import('../../src/app.js')
   const { closeDb, getDb } = await import('../../src/db/client.js')
 
+  // Close shared connections before removing the workspace, even if setup fails.
+  context.addCleanup(closeDb)
+
   const admin = { username: 'admin', password: 'Test1234!' }
   getDb()
     .prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)')
@@ -29,10 +32,9 @@ export async function startAuthServer(t, options = {}) {
   })
   const port = server.address().port
 
-  t.after(async () => {
+  context.addCleanup(async () => {
     server.closeAllConnections()
     await new Promise((resolve) => server.close(resolve))
-    closeDb()
   })
 
   // fetch는 Origin 같은 헤더를 마음대로 못 바꾸므로 node:http를 쓴다
