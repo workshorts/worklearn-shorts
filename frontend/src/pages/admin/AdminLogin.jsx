@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getAdmin, loginAdmin } from '../../api/adminApi.js';
 import './login.css';
+import { adminPreview } from '../../components/admin/adminPreview.js';
 
 function EyeIcon({ visible }) {
   return (
@@ -16,19 +17,35 @@ export default function AdminLogin({ onAuthenticated, homeHref = '/' }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [visible, setVisible] = useState(false);
-  const [status, setStatus] = useState('idle');
+  const [status, setStatus] = useState(adminPreview ? 'idle' : 'checking');
   const [error, setError] = useState('');
   const [fields, setFields] = useState({});
   const usernameRef = useRef(null);
   const passwordRef = useRef(null);
   const submitting = useRef(false);
 
+  const authenticatedRef = useRef(onAuthenticated);
+  authenticatedRef.current = onAuthenticated;
+
+  useEffect(() => {
+    if (adminPreview) return;
+    const controller = new AbortController();
+    getAdmin(controller.signal).then(() => {
+      if (!controller.signal.aborted) authenticatedRef.current();
+    }).catch((err) => {
+      if (controller.signal.aborted) return;
+      if (err.status !== 401) setError(err.message);
+      setStatus('idle');
+    });
+    return () => controller.abort();
+  }, []);
+
   async function handleSubmit(event) {
     event.preventDefault();
-    if (submitting.current) return;
+    if (submitting.current || status === 'checking') return;
     const nextFields = {
-      username: username.trim() ? '' : '아이디를 입력해 주세요.',
-      password: password ? '' : '비밀번호를 입력해 주세요.',
+      username: !username.trim() ? '아이디를 입력해 주세요.' : username.trim().length > 50 ? '아이디는 1~50자로 입력해 주세요.' : '',
+      password: !password ? '비밀번호를 입력해 주세요.' : password.length > 128 ? '비밀번호는 1~128자로 입력해 주세요.' : '',
     };
     setFields(nextFields);
     setError('');
@@ -86,12 +103,13 @@ export default function AdminLogin({ onAuthenticated, homeHref = '/' }) {
           {fields.password && <p id="password-error" className="field-error">{fields.password}</p>}
           {error && <p className="form-error" role="alert">{error}</p>}
           <button className="primary-button login-submit" type="submit" disabled={busy}>
-            <span aria-live="polite">{status === 'submitting' ? '로그인 중…' : '로그인'}</span>
-            {!busy && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="false">
+            <span aria-live="polite">{status === 'checking' ? '로그인 상태 확인 중…' : status === 'submitting' ? '로그인 중…' : '로그인'}</span>
+            {!busy && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
               <path d="M4 12h16m-6-6 6 6-6 6" />
             </svg>}
           </button>
         </form>
+        {adminPreview && <p className="success-note"><a href="/admin/videos">관리자 화면 미리보기</a></p>}
         <a className="login-home" href={homeHref}>사용자 화면으로 돌아가기</a>
       </section>
     </main>

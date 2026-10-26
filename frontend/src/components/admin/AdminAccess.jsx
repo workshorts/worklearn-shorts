@@ -12,7 +12,7 @@ export default function AdminAccess({ children, navigate }) {
     if (adminPreview) return // 어드민 프리뷰 모드라면 로그인 상태확인 패스
     const controller = new AbortController()
     getAdmin(controller.signal)
-      .then(() => setStatus('ready'))
+      .then(() => { if (!controller.signal.aborted) setStatus('ready') })
       .catch((err) => {
         if (controller.signal.aborted) return
         if (err.status === 401) navigate('/admin/login', { replace: true })
