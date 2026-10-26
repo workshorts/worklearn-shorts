@@ -1,8 +1,9 @@
 export class ApiError extends Error {
-  constructor(message, status, fields) {
+  constructor(message, status, fields, code) {
     super(message);
     this.status = status;
     this.fields = fields;
+    this.code = code;
   }
 }
 
@@ -23,12 +24,15 @@ export async function adminRequest(path, { signal, timeoutMs = 25_000, ...option
     const data = isJson ? await response.json() : null;
     if (!response.ok) {
       const message =
+        data?.code === 'ORIGIN_FORBIDDEN' ? '접속 주소가 허용되지 않았습니다. http://localhost:5173에서 다시 접속해 주세요.' :
+        data?.code === 'INVALID_CREDENTIALS' ? '아이디 또는 비밀번호를 확인해 주세요.' :
+        data?.code === 'AUTH_REQUIRED' ? '로그인이 만료되었습니다. 다시 로그인해 주세요.' :
         response.status === 401 ? (path === 'login' ? '아이디 또는 비밀번호를 확인해 주세요.' : '로그인이 만료되었습니다. 다시 로그인해 주세요.') :
         response.status === 403 ? '관리자 접근 권한이 없습니다.' :
         response.status === 429 ? '요청이 많습니다. 잠시 후 다시 시도해 주세요.' :
         response.status >= 500 ? '서버가 준비 중이거나 응답하지 않습니다. 잠시 후 다시 시도해 주세요.' :
         data?.message || '요청을 처리하지 못했습니다. 다시 시도해 주세요.';
-      throw new ApiError(message, response.status, data?.fields);
+      throw new ApiError(message, response.status, data?.fields, data?.code);
     }
     // SPA fallback HTML must never be mistaken for successful authentication.
     if (!isJson && response.status !== 204) {
