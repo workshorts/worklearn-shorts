@@ -19,8 +19,13 @@ export function hashPassword(password) {
   return `scrypt$${N}$${R}$${P}$${salt.toString('hex')}$${hash.toString('hex')}`
 }
 
+// This checks the supported storage format, not password correctness.
+export function isSupportedPasswordHash(stored) {
+  return typeof stored === 'string' && stored.length === 114 && storedPattern.test(stored)
+}
+
 export function verifyPassword(password, stored) {
-  if (typeof password !== 'string' || typeof stored !== 'string' || stored.length !== 114) return false
+  if (typeof password !== 'string' || !isSupportedPasswordHash(stored)) return false
   const match = storedPattern.exec(stored)
   if (!match) return false
 
