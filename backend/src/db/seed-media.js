@@ -100,17 +100,13 @@ async function inspectFile(root, kind, relativePath, field) {
   }
 }
 
-// Run before the synchronous seed transaction; detection does not prove playability.
-export async function verifySeedMedia(samples, { uploadDir = config.uploadDir } = {}) {
+// Validate manifest paths without accessing the filesystem or starting detection.
+export function validateSeedMediaPaths(samples) {
   if (!Array.isArray(samples) || samples.length === 0) {
     throw invalid('samples', 'At least one sample video is required.')
   }
-  if (typeof uploadDir !== 'string' || uploadDir.trim() === '' || uploadDir.includes('\0')) {
-    throw invalid('UPLOAD_DIR', 'Must be a non-empty filesystem path.')
-  }
-
   const usedPaths = new Set()
-  const inputs = samples.map((sample, index) => {
+  return Array.from(samples, (sample, index) => {
     if (sample === null || typeof sample !== 'object' || Array.isArray(sample)) {
       throw invalid(`samples[${index}]`, 'Must be a sample video object.')
     }
@@ -130,6 +126,14 @@ export async function verifySeedMedia(samples, { uploadDir = config.uploadDir } 
     }
     return input
   })
+}
+
+// Run before the synchronous seed transaction; detection does not prove playability.
+export async function verifySeedMedia(samples, { uploadDir = config.uploadDir } = {}) {
+  if (typeof uploadDir !== 'string' || uploadDir.trim() === '' || uploadDir.includes('\0')) {
+    throw invalid('UPLOAD_DIR', 'Must be a non-empty filesystem path.')
+  }
+  const inputs = validateSeedMediaPaths(samples)
 
   const root = resolve(backendDirectory, uploadDir)
   const results = []
