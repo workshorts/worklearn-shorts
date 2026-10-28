@@ -48,12 +48,15 @@ test('default video manifest matches all eight reserved paths, titles and option
 
 test('seed videos store the baseline in order with database timestamps and persist after reopening', t => {
   const { context, path, database } = setup(t)
-  const started = Date.now()
+  // Compare insertion bounds using the same SQLite clock that creates the timestamps.
+  const clockSql = "SELECT strftime('%Y-%m-%dT%H:%M:%fZ', 'now') AS value"
+  const started = Date.parse(database.prepare(clockSql).get().value)
   const result = withTransaction(database, connection => {
     const videos = insertSeedVideos(connection)
     assert.equal(connection.isTransaction, true)
     return videos
   })
+  const finished = Date.parse(database.prepare(clockSql).get().value)
   const rows = database.prepare('SELECT * FROM videos ORDER BY id').all()
   assert.equal(rows.length, 8)
   assert.deepEqual(result, rows.map(row => ({ id: row.id, videoPath: row.video_path })))
@@ -65,7 +68,7 @@ test('seed videos store the baseline in order with database timestamps and persi
     assert.equal(row.thumbnail_path, sample.thumbnailPath)
     for (const timestamp of [row.created_at, row.updated_at]) {
       assert.match(timestamp, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
-      assert.ok(Date.parse(timestamp) >= started && Date.parse(timestamp) <= Date.now())
+      assert.ok(Date.parse(timestamp) >= started && Date.parse(timestamp) <= finished)
     }
     if (index > 0) assert.ok(row.id > rows[index - 1].id)
   }
