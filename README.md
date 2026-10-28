@@ -22,6 +22,18 @@ npm run admin:create   # 관리자 계정 생성
 npm run dev            # http://localhost:3000
 ```
 
+#### 시연 데이터 (선택)
+
+영상·학습과정 화면과 API를 시험하려면 샘플 데이터가 필요하다.
+
+```sh
+# 1) 샘플 영상·썸네일(sample-media.zip)을 backend/ 안에서 풀어 backend/uploads/ 아래에 둔다 (Git에 올라가지 않음)
+# 2) 관리자·태그·샘플 영상 8개를 넣는다 (관리자 계정도 만들어 주므로 admin:create는 생략해도 된다)
+npm run db:seed
+# 3) 학습과정 3개를 넣는다 (db:seed 다음에 실행, 여러 번 실행해도 안전)
+npm run db:seed:courses
+```
+
 ### 2. 프론트엔드
 
 ```sh

@@ -4,6 +4,7 @@ import { errors } from './errors.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requireAllowedOrigin } from './middleware/requireAllowedOrigin.js'
 import { adminAuthRouter } from './routes/adminAuth.js'
+import { coursesRouter } from './routes/courses.js'
 
 export const app = express()
 
@@ -17,6 +18,9 @@ app.use('/uploads', express.static(config.uploadDir, { index: false }))
 
 // 관리자 API - 반드시 '없는 주소'보다 위에 둔다
 app.use('/api/admin', adminAuthRouter)
+
+// 사용자 API
+app.use('/api/courses', coursesRouter)
 
 // 없는 주소
 app.use((req, res, next) => next(errors.notFound()))
