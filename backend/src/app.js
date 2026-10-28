@@ -1,6 +1,7 @@
 import express from 'express'
 import { config } from './config/index.js'
-import { ApiError, errors } from './errors.js'
+import { errors } from './errors.js'
+import { errorHandler } from './middleware/errorHandler.js'
 import { requireAllowedOrigin } from './middleware/requireAllowedOrigin.js'
 import { adminAuthRouter } from './routes/adminAuth.js'
 
@@ -20,16 +21,5 @@ app.use('/api/admin', adminAuthRouter)
 // 없는 주소
 app.use((req, res, next) => next(errors.notFound()))
 
-// 오류 처리: 항상 {code, message, fields} 형식
-app.use((err, req, res, next) => {
-  if (err instanceof ApiError) {
-    res.set(err.headers)
-    return res.status(err.status).json({ code: err.code, message: err.message, fields: err.fields })
-  }
-  if (err.type === 'entity.parse.failed') {
-    const e = errors.invalidJson()
-    return res.status(e.status).json({ code: e.code, message: e.message, fields: e.fields })
-  }
-  console.error(err)
-  res.status(500).json({ code: 'INTERNAL_ERROR', message: '서버 오류가 발생했습니다.', fields: {} })
-})
+// Keep the shared error boundary after every route and the not-found handler.
+app.use(errorHandler)
