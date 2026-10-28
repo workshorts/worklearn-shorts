@@ -19,20 +19,33 @@ export async function startAuthServer(t, options = {}) {
   const { app } = await import('../../src/app.js')
   const { closeDb, getDb } = await import('../../src/db/client.js')
 
-  const admin = { username: 'admin', password: 'Test1234!' }
-  getDb()
-    .prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)')
-    .run(admin.username, hashPassword(admin.password))
+  // Close shared connections before removing the workspace, even if setup fails.
+  context.addCleanup(closeDb)
+
+  const admin = options.admin ?? { username: 'admin', password: 'Test1234!' }
+  let uploadDir
+  if (options.seed === true) {
+    // Use the real seed path when testing password compatibility with authentication.
+    const { seedDatabase } = await import('../../src/db/seed.js')
+    const { createSeedMediaFixture } = await import('./seed-media-fixture.js')
+    uploadDir = createSeedMediaFixture(context)
+    await seedDatabase(getDb(), {
+      environment: { ADMIN_USERNAME: admin.username, ADMIN_PASSWORD: admin.password }, uploadDir
+    })
+  } else {
+    getDb()
+      .prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)')
+      .run(admin.username, hashPassword(admin.password))
+  }
 
   const server = await new Promise((resolve) => {
     const started = app.listen(0, '127.0.0.1', () => resolve(started))
   })
   const port = server.address().port
 
-  t.after(async () => {
+  context.addCleanup(async () => {
     server.closeAllConnections()
     await new Promise((resolve) => server.close(resolve))
-    closeDb()
   })
 
   // fetch는 Origin 같은 헤더를 마음대로 못 바꾸므로 node:http를 쓴다
@@ -79,5 +92,5 @@ export async function startAuthServer(t, options = {}) {
     return { res, cookie: setCookie.split(';')[0] }
   }
 
-  return { admin, request, login, getDb }
+  return { admin, request, login, getDb, databasePath, uploadDir }
 }
