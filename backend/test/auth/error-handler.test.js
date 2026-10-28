@@ -6,6 +6,34 @@ import { errors } from '../../src/errors.js'
 import { errorHandler } from '../../src/middleware/errorHandler.js'
 import { startAuthServer } from '../helpers/auth-server.js'
 
+const sqliteWarningPattern = /^\(node:\d+\) ExperimentalWarning: SQLite is an experimental feature and might change at any time(?:\r?\n\(Use `node --trace-warnings \.\.\.` to show where the warning was created\))?$/
+
+function assertInternalErrorLog(calls) {
+  // Ignore only the known runtime warning; unexpected application logs must still fail.
+  const applicationCalls = calls.filter(args => {
+    if (args.length !== 1 || typeof args[0] !== 'string') return true
+    return sqliteWarningPattern.exec(args[0])?.[0] !== args[0]
+  })
+  assert.deepEqual(applicationCalls, [['INTERNAL_ERROR']])
+}
+
+test('error log assertions tolerate only the SQLite runtime warning and still reject leaked or extra logs', () => {
+  const warning = '(node:123) ExperimentalWarning: SQLite is an experimental feature and might change at any time'
+  const hint = '\n(Use `node --trace-warnings ...` to show where the warning was created)'
+  const internal = ['INTERNAL_ERROR']
+  assertInternalErrorLog([internal])
+  assertInternalErrorLog([[warning], internal])
+  assertInternalErrorLog([internal, [warning + hint]])
+  for (const calls of [[], [[warning]], [internal, internal],
+    [internal, [new Error('SELECT private_hash at C:/private/app.db')]],
+    [internal, ['private-session']], [['INTERNAL_ERROR', 'private-hash']],
+    [internal, [warning, 'private-hash']], [internal, [warning + '\nprivate-hash']],
+    [internal, [warning + hint + '\n']],
+    [internal, ['(node:123) DeprecationWarning: another warning']]]) {
+    assert.throws(() => assertInternalErrorLog(calls), { code: 'ERR_ASSERTION' })
+  }
+})
+
 test('the shared adapter handles synchronous throws, next errors and rejected async routes over HTTP', async t => {
   const log = t.mock.method(console, 'error', () => {})
   const app = express()
@@ -32,8 +60,7 @@ test('the shared adapter handles synchronous throws, next errors and rejected as
   const rejected = await fetch(base + '/async')
   assert.equal(rejected.status, 500)
   assert.deepEqual(await rejected.json(), { code: 'INTERNAL_ERROR', message: '서버 오류가 발생했습니다.', fields: {} })
-  assert.equal(log.mock.callCount(), 1)
-  assert.deepEqual(log.mock.calls[0].arguments, ['INTERNAL_ERROR'])
+  assertInternalErrorLog(log.mock.calls.map(call => call.arguments))
 })
 
 test('the production app uses the adapter for JSON, not-found and database failures and recovers normally', async t => {
@@ -57,8 +84,7 @@ test('the production app uses the adapter for JSON, not-found and database failu
   } finally {
     prepare.mock.restore()
   }
-  assert.equal(log.mock.callCount(), 1)
-  assert.deepEqual(log.mock.calls[0].arguments, ['INTERNAL_ERROR'])
+  assertInternalErrorLog(log.mock.calls.map(call => call.arguments))
   const recovered = await login()
   assert.equal(recovered.res.status, 200)
   assert.ok(recovered.cookie.startsWith('admin_session='))
