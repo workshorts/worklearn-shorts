@@ -145,3 +145,17 @@ export async function verifySeedMedia(samples, { uploadDir = config.uploadDir } 
   }
   return results
 }
+
+// 파일 하나를 시드와 같은 기준으로 검사한다(영상 수정에서 바뀐 파일만 확인할 때 쓴다).
+// kind는 'video' 또는 'thumbnail'이고, relativePath는 업로드 API가 돌려준 경로 형식이어야 한다.
+export async function verifySingleMedia(kind, relativePath, { uploadDir = config.uploadDir } = {}) {
+  if (!Object.hasOwn(rules, kind)) throw invalid('kind', 'Must be video or thumbnail.')
+  if (typeof relativePath !== 'string' || !rules[kind].pattern.test(relativePath) ||
+      relativePath.includes('\n') || relativePath.includes('\r')) {
+    throw invalid('path', 'Must be a permitted uploads-relative UUID media path.')
+  }
+  if (typeof uploadDir !== 'string' || uploadDir.trim() === '' || uploadDir.includes('\0')) {
+    throw invalid('UPLOAD_DIR', 'Must be a non-empty filesystem path.')
+  }
+  return inspectFile(resolve(backendDirectory, uploadDir), kind, relativePath, 'path')
+}
