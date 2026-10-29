@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 640" width="360" height="640" role="img" aria-label="썸네일 없음">
+  <title>썸네일 없음</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e2e8f0"/>
+      <stop offset="1" stop-color="#cbd5e1"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="640" fill="url(#bg)"/>
+  <circle cx="180" cy="320" r="56" fill="#ffffff" fill-opacity="0.85"/>
+  <path d="M164 292 L164 348 L212 320 Z" fill="#64748b"/>
+</svg>
