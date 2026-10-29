@@ -1,0 +1,22 @@
+/* 피드 컴포넌트 구조를 확인하기 위한 기본 배치. 목업 상세 스타일은 다음 단계에서 적용 */
+.learner-feed-page { min-height: 100dvh; background: #10151e; color: #f5f6fa; font-family: 'Malgun Gothic', Arial, sans-serif; }
+.learner-feed-page, .learner-feed-page * { box-sizing: border-box; }
+.feed-structure-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 28px; background: white; color: #172337; }
+.feed-structure-header h1 { font-size: 26px; margin: 0; letter-spacing: -1px; }
+.feed-structure-header a { color: #65718b; font-size: 13px; }
+.feed-structure-header nav { display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: flex-end; }
+.feed-content { max-width: 480px; margin-inline: auto; padding: 24px 16px; }
+.feed-video-list { display: grid; gap: 28px; }
+.feed-video-card { overflow: hidden; border: 1px solid #303744; border-radius: 12px; background: #1a202a; }
+.feed-video-player { display: block; width: 100%; aspect-ratio: 9 / 16; background: black; object-fit: contain; }
+.feed-video-info { padding: 18px; }
+.feed-video-info h2 { font-size: 18px; line-height: 1.6; margin: 0; overflow-wrap: anywhere; }
+.feed-video-info p { margin: 8px 0 0; color: #b0bbce; font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
+.feed-video-tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; color: #b6beff; font-size: 12px; }
+.feed-video-actions { padding: 0 18px 18px; }
+.feed-empty { padding: 60px 16px; text-align: center; color: #b0bbce; }
+@media (max-width: 767px) {
+  .feed-structure-header { padding: 15px 18px; }
+  .feed-structure-header h1 { font-size: 23px; }
+  .feed-content { padding: 16px 12px; }
+}
