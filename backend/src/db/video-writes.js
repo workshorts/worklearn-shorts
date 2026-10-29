@@ -146,3 +146,38 @@ export function applyVideoPatch(database, id, changes, verified) {
 
   return { status: 'ok', replacedPaths }
 }
+
+// 과정에서 영상이 빠진 뒤, 남은 영상의 재생 순서를 1부터 빈틈없이 다시 매긴다(순서는 그대로).
+// 순서가 작은 것부터 한 줄씩 앞 번호로 옮기면 UNIQUE(course_id, sort_order)와 부딪히지 않는다.
+function compactCourseOrder(database, courseId) {
+  const rows = database.prepare('SELECT video_id, sort_order FROM course_videos WHERE course_id = ? ORDER BY sort_order').all(courseId)
+  const move = database.prepare('UPDATE course_videos SET sort_order = ? WHERE course_id = ? AND video_id = ?')
+  rows.forEach((row, index) => {
+    if (row.sort_order !== index + 1) move.run(index + 1, courseId, row.video_id)
+  })
+}
+
+// 영상 1개를 지운다. 반드시 쓰기 트랜잭션(IMMEDIATE) 안에서 부른다.
+// 태그·과정 연결·조회·좋아요·댓글·퀴즈·보기는 DB의 연쇄 삭제로 함께 사라지고, 영상이 빠진 과정은 순서를 다시 매긴다.
+// 태그와 과정 자체는 남는다.
+//
+// 결과: { status: 'missing' } 영상이 없음 / { status: 'ok', removedPaths } 삭제 완료.
+// removedPaths는 이제 쓰이지 않는 영상·썸네일 파일 경로다(트랜잭션이 성공한 뒤에 지운다).
+// 혹시 다른 영상이 같은 경로를 쓰고 있다면 그 파일은 목록에 넣지 않는다.
+export function deleteVideo(database, id) {
+  if (!database.isTransaction) throw new Error('Video deletion requires an active transaction.')
+
+  const files = readVideoFilePaths(database, id)
+  if (files === null) return { status: 'missing' }
+
+  const courseIds = database.prepare('SELECT DISTINCT course_id FROM course_videos WHERE video_id = ? ORDER BY course_id').all(id).map(row => row.course_id)
+
+  database.prepare('DELETE FROM videos WHERE id = ?').run(id)
+  for (const courseId of courseIds) compactCourseOrder(database, courseId)
+
+  const stillUsed = database.prepare(
+    'SELECT 1 FROM videos WHERE (lower(video_path) = lower(?) OR (thumbnail_path IS NOT NULL AND lower(thumbnail_path) = lower(?))) LIMIT 1'
+  )
+  const removedPaths = [files.videoPath, files.thumbnailPath].filter(path => path !== null && !stillUsed.get(path, path))
+  return { status: 'ok', removedPaths }
+}

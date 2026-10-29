@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { getDb } from '../db/client.js'
 import { readAdminVideo } from '../db/admin-video-queries.js'
 import { withTransaction } from '../db/transaction.js'
-import { applyVideoPatch, changedFiles, createVideo, readVideoFilePaths } from '../db/video-writes.js'
+import { applyVideoPatch, changedFiles, createVideo, deleteVideo, readVideoFilePaths } from '../db/video-writes.js'
 import { loadVideos } from '../db/video-queries.js'
 import { errors } from '../errors.js'
 import { removeUploadedFiles } from '../lib/media-files.js'
@@ -89,4 +89,17 @@ adminVideosRouter.patch('/:id', requireJson, async (req, res) => {
     return res.json(result.video)
   }
   throw new Error('The video kept changing while it was being updated.')
+})
+
+// DELETE /api/admin/videos/:id - 영상 삭제 (204, 본문 없음)
+// 연결·댓글·퀴즈·조회·좋아요는 함께 삭제되고(DB 연쇄 삭제), 영상·썸네일 파일은 DB 삭제가 성공한 뒤에 정리한다.
+adminVideosRouter.delete('/:id', async (req, res) => {
+  const id = parseResourceId(req.params.id)
+
+  const result = withTransaction(getDb(), database => deleteVideo(database, id))
+  if (result.status === 'missing') throw errors.notFound('영상을 찾을 수 없습니다.')
+
+  // 파일 정리는 최선을 다하되 실패해도 삭제 결과(204)는 바꾸지 않는다.
+  await removeUploadedFiles(result.removedPaths)
+  res.status(204).end()
 })
