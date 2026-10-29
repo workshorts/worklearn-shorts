@@ -83,7 +83,8 @@ VITE_ADMIN_PREVIEW=true
 | 로그인·세션 확인·로그아웃 | 구현 및 API 함수 통합 테스트 완료 | 구현 |
 | 관리자 진입 보호 | 구현 | `/api/admin/me` 사용 |
 | 영상 목록·등록·수정·삭제 | 화면 및 요청 함수 구현 | API 미구현 |
-| 파일 업로드·태그 관리 | 화면 및 요청 함수 구현 | API 미구현 |
+| 파일 업로드 | 화면 및 요청 함수 구현, 실제 API 통합 테스트 완료 | 구현 |
+| 태그 관리 | 화면 및 요청 함수 구현 | API 미구현 |
 | 퀴즈 편집 | 영상 폼에 구현 | 영상 API 연동 대기 |
 | 학습과정 목록·생성·수정·삭제·영상 순서 | 화면 및 요청 함수 구현 | API 미구현 |
 | 관리자 댓글 삭제 | 화면 미구현 | API 미구현 |
@@ -102,6 +103,7 @@ VITE_ADMIN_PREVIEW=true
 - `credentials: 'include'`, 서버가 발급한 HttpOnly 쿠키 사용. 비밀번호·토큰을 localStorage에 저장하지 않음
 - 오류는 `{ code, message, fields }`. 계정 불일치·세션 만료·Origin 거절을 구분하고 필드 오류 표시
 - 파일 업로드는 `POST /api/admin/uploads`에 `FormData(kind, file)` 전송. Content-Type boundary는 브라우저가 설정
+- `kind`(`video`·`thumbnail`)는 **반드시 `file`보다 먼저** append합니다. 성공 `201 { path, url }`이며, `path`(`videos/UUID.mp4` 등)를 영상 등록·수정 요청에 넣습니다. 영상은 MP4·WebM 50MB, 썸네일은 PNG·JPEG·WebP 10MB까지이고, 형식은 파일 내용으로 판단합니다(확장자를 바꿔도 통과하지 않음). 오류는 `400 VALIDATION_ERROR`·`413 FILE_TOO_LARGE`·`415 UNSUPPORTED_MEDIA_TYPE`
 
 ## 사용자(학습자) 화면에서 API 쓰는 법 (학습과정)
 
@@ -146,7 +148,7 @@ function CourseDetail({ courseId }) {
 
 ```sh
 npm run build
-npm test      # test/ 아래 모든 시험 (adminAuth, learnerApi, learnerLib)
+npm test      # test/ 아래 모든 시험 (adminAuth, adminUpload, learnerApi, learnerLib)
 ```
 
 통합 테스트에는 백엔드 의존성 설치도 필요합니다. 기존 백엔드 테스트 도우미로 임시 DB·계정을 만들고 종료 시 정리합니다. 실제 개발 DB나 계정을 수정하지 않습니다. 로그인 성공·실패, 길이 검증, 세션 확인·로그아웃, Origin 거절, multipart 헤더, HTML fallback 처리를 검사합니다. Node에서 쿠키 전달을 모사하므로 브라우저 쿠키 정책·화면 검증은 별도로 필요합니다.

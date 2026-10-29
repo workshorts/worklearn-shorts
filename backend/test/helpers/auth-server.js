@@ -1,3 +1,4 @@
+import { mkdirSync } from 'node:fs'
 import http from 'node:http'
 import { createDatabaseContext } from './database-context.js'
 
@@ -7,6 +8,14 @@ export async function startAuthServer(t, options = {}) {
   const context = createDatabaseContext(t)
   const databasePath = context.path('auth.db')
   context.initialize(databasePath)
+
+  // 업로드를 시험할 때는 임시 폴더를 쓰게 해서 실제 uploads 폴더를 건드리지 않는다.
+  let uploadDir
+  if (options.uploads === true) {
+    uploadDir = context.path('uploads')
+    mkdirSync(uploadDir, { recursive: true })
+    process.env.UPLOAD_DIR = uploadDir
+  }
 
   process.env.DB_PATH = databasePath
   process.env.AUTH_SECRET = 'test-secret-test-secret-1234'
@@ -23,7 +32,6 @@ export async function startAuthServer(t, options = {}) {
   context.addCleanup(closeDb)
 
   const admin = options.admin ?? { username: 'admin', password: 'Test1234!' }
-  let uploadDir
   if (options.seed === true) {
     // Use the real seed path when testing password compatibility with authentication.
     const { seedDatabase } = await import('../../src/db/seed.js')
@@ -54,8 +62,9 @@ export async function startAuthServer(t, options = {}) {
       const sendHeaders = { ...headers }
       let payload
       if (body !== undefined) {
-        payload = typeof body === 'string' ? body : JSON.stringify(body)
-        sendHeaders['Content-Type'] ??= 'application/json'
+        // Buffer는 그대로 보낸다(멀티파트 업로드 시험용). 객체는 JSON으로 보낸다.
+        payload = Buffer.isBuffer(body) || typeof body === 'string' ? body : JSON.stringify(body)
+        sendHeaders['Content-Type'] ??= Buffer.isBuffer(body) ? 'application/octet-stream' : 'application/json'
         sendHeaders['Content-Length'] = Buffer.byteLength(payload)
       }
       if (cookie) sendHeaders.Cookie = cookie
@@ -92,5 +101,5 @@ export async function startAuthServer(t, options = {}) {
     return { res, cookie: setCookie.split(';')[0] }
   }
 
-  return { admin, request, login, getDb, databasePath, uploadDir }
+  return { admin, request, login, getDb, databasePath, uploadDir, port }
 }
