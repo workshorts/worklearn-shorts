@@ -5,3 +5,7 @@ export function loadVideoPageIds(database, { page, limit }) {
   return database.prepare('SELECT id FROM videos ORDER BY id DESC LIMIT ? OFFSET ?')
     .all(limit, offset).map(row => row.id)
 }
+
+export function countVideos(database) {
+  return database.prepare('SELECT COUNT(*) AS total FROM videos').get().total
+}
