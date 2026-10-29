@@ -1,10 +1,14 @@
 import { Router } from 'express'
 import { getDb } from '../db/client.js'
-import { loadQuiz } from '../db/quiz-queries.js'
+import { readAdminVideo } from '../db/admin-video-queries.js'
 import { withTransaction } from '../db/transaction.js'
+import { createVideo } from '../db/video-writes.js'
 import { loadVideos } from '../db/video-queries.js'
 import { errors } from '../errors.js'
+import { verifyMediaFiles } from '../lib/media-verification.js'
+import { parseVideoCreate } from '../lib/video-input.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
+import { requireJson } from '../middleware/requireJson.js'
 import { parseLimit, parsePage } from '../utils/pagination.js'
 import { parseOptionalId } from '../utils/query-id.js'
 import { parseResourceId } from '../utils/resource-id.js'
@@ -39,24 +43,20 @@ adminVideosRouter.get('/', (req, res) => {
 adminVideosRouter.get('/:id', (req, res) => {
   const id = parseResourceId(req.params.id)
 
-  const video = withTransaction(getDb(), database => {
-    const [found] = loadVideos(database, {
-      where: 'WHERE v.id = ?',
-      params: [id],
-      mapExtra: row => ({ videoPath: row.video_path, thumbnailPath: row.thumbnail_path })
-    })
-    return found ? { ...found, quiz: loadQuiz(database, id) } : null
-  }, { mode: 'DEFERRED' })
+  const video = withTransaction(getDb(), database => readAdminVideo(database, id), { mode: 'DEFERRED' })
 
   if (video === null) throw errors.notFound('영상을 찾을 수 없습니다.')
+  res.json(video)
+})
 
-  // 명세서의 필드 순서: Video 필드 다음에 편집용 필드
-  const { videoPath, thumbnailPath, quiz, ...base } = video
-  res.json({
-    ...base,
-    tagIds: base.tags.map(tag => tag.id).sort((first, second) => first - second),
-    videoPath,
-    thumbnailPath,
-    quiz
-  })
+// POST /api/admin/videos - 영상 등록 (영상 + 태그 + 퀴즈를 한 번에 저장)
+// 먼저 POST /api/admin/uploads로 올린 파일의 경로를 videoPath·thumbnailPath에 넣는다.
+adminVideosRouter.post('/', requireJson, async (req, res) => {
+  const input = parseVideoCreate(req.body)
+  // 파일 검사는 비동기라 트랜잭션 밖에서 먼저 한다. 태그·중복 확인과 저장은 한 트랜잭션 안에서 한다.
+  await verifyMediaFiles(input)
+
+  const video = withTransaction(getDb(), database => readAdminVideo(database, createVideo(database, input)))
+
+  res.status(201).location(`/api/admin/videos/${video.id}`).json(video)
 })
