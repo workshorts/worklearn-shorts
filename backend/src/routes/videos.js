@@ -1,10 +1,14 @@
 import { Router } from 'express'
 import { getDb } from '../db/client.js'
+import { validateVideoListRequest } from '../middleware/validateVideoListRequest.js'
 import { loadVideoDetail } from '../services/video-read.js'
 import { parseResourceId } from '../utils/resource-id.js'
 import { readOptionalVisitorId } from '../utils/visitor-id.js'
 
 export const videosRouter = Router()
+
+// The list response handler will consume these inputs once pagination is connected.
+videosRouter.get('/', validateVideoListRequest)
 
 // Public detail requests validate input before opening or querying the database.
 videosRouter.get('/:id', (req, res) => {
