@@ -10,7 +10,8 @@
     "db:seed": "node db/seed.js",
     "test": "node --test --test-reporter=spec --test-concurrency=1 \"test/**/*.test.js\"",
     "test:db": "node --test --test-reporter=spec --test-concurrency=1 \"test/db/*.test.js\"",
-    "admin:create": "node scripts/create-admin.js"
+    "admin:create": "node scripts/create-admin.js",
+    "db:seed:courses": "node db/seed-courses.js"
   },
   "engines": {
     "node": ">=22.20.0"
