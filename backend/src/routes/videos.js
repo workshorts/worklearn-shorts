@@ -1,11 +1,15 @@
 import { Router } from 'express'
 import { getDb } from '../db/client.js'
 import { validateVideoListRequest } from '../middleware/validateVideoListRequest.js'
+import { validateVideoViewRequest } from '../middleware/validateVideoViewRequest.js'
 import { loadVideoDetail, loadVideoList } from '../services/video-read.js'
 import { parseResourceId } from '../utils/resource-id.js'
 import { readOptionalVisitorId } from '../utils/visitor-id.js'
 
 export const videosRouter = Router()
+
+// The write handler will consume this input once view recording is connected.
+videosRouter.post('/:id/view', validateVideoViewRequest)
 
 // Public list requests validate input before opening or querying the database.
 videosRouter.get('/', validateVideoListRequest, (req, res) => {
