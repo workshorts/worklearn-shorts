@@ -4,15 +4,19 @@ import { validateVideoListRequest } from '../middleware/validateVideoListRequest
 import { validateVideoLikeRequest } from '../middleware/validateVideoLikeRequest.js'
 import { validateVideoViewRequest } from '../middleware/validateVideoViewRequest.js'
 import { loadVideoDetail, loadVideoList } from '../services/video-read.js'
+import { addVideoLike } from '../services/video-like.js'
 import { recordVideoView } from '../services/video-view.js'
 import { parseResourceId } from '../utils/resource-id.js'
 import { readOptionalVisitorId } from '../utils/visitor-id.js'
 
 export const videosRouter = Router()
 
-// Share input validation while the write operations and responses are added separately.
+// The synchronous service returns after commit; DELETE currently shares validation only.
 videosRouter.route('/:id/like')
-  .put(validateVideoLikeRequest)
+  .put(validateVideoLikeRequest, (req, res) => {
+    const result = addVideoLike(getDb(), res.locals.videoLikeRequest)
+    res.json(result)
+  })
   .delete(validateVideoLikeRequest)
 
 // Validate before opening the database and send success only after the service commits.
