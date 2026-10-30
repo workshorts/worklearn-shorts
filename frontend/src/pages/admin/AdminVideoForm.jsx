@@ -10,6 +10,9 @@ export default function AdminVideoForm({ id, navigate }) {
   const editing = !!id
   const [form, setForm] = useState(null)
   const [tags, setTags] = useState([])
+  const [tagsLoading, setTagsLoading] = useState(true)
+  const [tagsError, setTagsError] = useState('')
+  const [tagsAttempt, setTagsAttempt] = useState(0)
   const [quiz, setQuiz] = useState(blankQuiz)
   const [videoFile, setVideoFile] = useState(null)
   const [thumbnailFile, setThumbnailFile] = useState(null)
@@ -29,8 +32,8 @@ export default function AdminVideoForm({ id, navigate }) {
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
   useEffect(() => {
     const controller = new AbortController()
-    Promise.all([getTags(controller.signal), editing ? getVideo(id, controller.signal) : Promise.resolve({ title: '', description: '', tagIds: [], videoPath: null, thumbnailPath: null, videoUrl: '', thumbnailUrl: '' })])
-      .then(([tagResult, video]) => { if (!controller.signal.aborted) { setTags(tagResult.data); setForm(video); setQuiz(readQuiz(video.quiz)) } })
+    const request = editing ? getVideo(id, controller.signal) : Promise.resolve({ title: '', description: '', tagIds: [], videoPath: null, thumbnailPath: null, videoUrl: '', thumbnailUrl: '' })
+    request.then((video) => { if (!controller.signal.aborted) { setForm(video); setQuiz(readQuiz(video.quiz)) } })
       .catch((err) => {
         if (controller.signal.aborted) return
         if (err.status === 401) navigate('/admin/login', { replace: true })
@@ -38,6 +41,18 @@ export default function AdminVideoForm({ id, navigate }) {
       })
     return () => controller.abort()
   }, [id, editing, attempt, navigate])
+  useEffect(() => {
+    const controller = new AbortController()
+    getTags(controller.signal)
+      .then((result) => { if (!controller.signal.aborted) setTags(result.data) })
+      .catch((err) => {
+        if (controller.signal.aborted) return
+        if (err.status === 401) navigate('/admin/login', { replace: true })
+        else setTagsError(err.message)
+      })
+      .finally(() => { if (!controller.signal.aborted) setTagsLoading(false) })
+    return () => controller.abort()
+  }, [tagsAttempt, navigate])
   useEffect(() => {
     if (!saving) return
     const warn = (event) => { event.preventDefault(); event.returnValue = '' }
@@ -98,6 +113,9 @@ export default function AdminVideoForm({ id, navigate }) {
       }
     } finally { locked.current = false; if (alive.current) setSaving(false) }
   }
+  const tagsDisabled = saving || tagsLoading || !!tagsError
+  // 태그 목록 응답으로 선택 ID를 덮어쓰거나 필터링하지 않는다. 이름을 몰라도 기존 연결은 보존한다.
+  const selectedTags = form?.tagIds.map((id) => ({ id, name: tags.find((tag) => tag.id === id)?.name || `태그 #${id}` })) || []
   const videoPicker = form && <FilePicker kind="video" file={videoFile} currentUrl={form.videoUrl} currentPath={form.videoPath} onChange={setVideoFile} compact={editing} disabled={saving} error={errors.video} onError={(issue) => fieldError('video', issue)} />
   return <div className="av-form-page">
     <header className="admin-heading"><h1>{editing && <a href="/admin/videos" aria-label="영상 목록으로" onClick={(e) => routeLink(e, navigate, '/admin/videos')}>←</a>}{editing ? '영상 수정' : '영상 등록'}</h1></header>
@@ -105,13 +123,13 @@ export default function AdminVideoForm({ id, navigate }) {
       {!editing && <div className="av-field"><label>영상 파일 <em>*</em></label>{videoPicker}</div>}
       <div className="av-field"><label htmlFor="video-title">제목 <em>*</em></label><div><input id="video-title" name="title" maxLength={100} placeholder="예: 엑셀 단축키 5개로 퇴근 10분 당기기" value={form.title} disabled={saving} aria-invalid={!!errors.title} aria-describedby={errors.title ? 'title-error' : undefined} onChange={(e) => { change({ title: e.target.value }); fieldError('title', '') }} />{errors.title && <p id="title-error" className="av-error" role="alert">{errors.title}</p>}</div></div>
       <div className="av-field"><label htmlFor="video-description">설명</label><div className="av-description"><textarea id="video-description" name="description" maxLength={500} placeholder="영상 설명을 입력하세요." value={form.description} disabled={saving} onChange={(e) => change({ description: e.target.value })} /><span className="av-count">{form.description.length}/500</span>{errors.description && <p className="av-error" role="alert">{errors.description}</p>}</div></div>
-      <div className="av-field"><label>영상 태그</label><div><div className="av-inline"><div className="av-selected-tags">{tags.filter((tag) => form.tagIds.includes(tag.id)).map((tag) => <span key={tag.id}>{tag.name}<button type="button" disabled={saving} aria-label={`${tag.name} 선택 해제`} onClick={() => change({ tagIds: form.tagIds.filter((id) => id !== tag.id) })}>×</button></span>)}</div><button type="button" className="av-button" disabled={saving} onClick={() => setPicker(true)}>＋ 태그 추가</button></div><p className="av-hint">영상 태그는 선택사항입니다.</p>{errors.tagIds && <p className="av-error" role="alert">{errors.tagIds}</p>}</div></div>
+      <div className="av-field"><label>영상 태그</label><div><div className="av-inline"><div className="av-selected-tags">{selectedTags.map((tag) => <span key={tag.id}>{tag.name}<button type="button" disabled={tagsDisabled} aria-label={`${tag.name} 선택 해제`} onClick={() => change({ tagIds: form.tagIds.filter((id) => id !== tag.id) })}>×</button></span>)}</div><button type="button" className="av-button" disabled={tagsDisabled} onClick={() => setPicker(true)}>＋ 태그 추가</button></div><p className="av-hint">영상 태그는 선택사항입니다.</p>{tagsLoading && <p className="av-hint" role="status">태그 목록을 불러오고 있습니다. 다른 항목은 계속 작성할 수 있습니다.</p>}{tagsError && <div><p className="av-error" role="alert">태그 목록을 불러오지 못했습니다. {tagsError}</p><p className="av-hint">기존 태그는 유지됩니다. 다른 항목을 수정하고 저장할 수 있습니다.</p><button type="button" className="av-button" disabled={saving} onClick={() => { setTagsLoading(true); setTagsError(''); setTagsAttempt((value) => value + 1) }}>태그 다시 시도</button></div>}{errors.tagIds && <p className="av-error" role="alert">{errors.tagIds}</p>}</div></div>
       {editing && <div className="av-field"><label>영상 파일 <em>*</em></label>{videoPicker}</div>}
       <div className="av-field"><label>썸네일</label><div><FilePicker kind="thumbnail" file={thumbnailFile} currentUrl={thumbnailRemoved ? '' : form.thumbnailUrl} currentPath={thumbnailRemoved ? '' : form.thumbnailPath} onChange={(file) => { setThumbnailFile(file); setThumbnailRemoved(false) }} compact disabled={saving} error={errors.thumbnail} onError={(issue) => fieldError('thumbnail', issue)} /><div className="av-thumbnail-hint"><span className="av-hint">없으면 기본 이미지가 사용됩니다.</span>{(thumbnailFile || (!thumbnailRemoved && form.thumbnailPath)) && <button className="av-text-button" type="button" disabled={saving} onClick={() => { setThumbnailFile(null); setThumbnailRemoved(true); fieldError('thumbnail', '') }}>썸네일 제거</button>}</div></div></div>
       <QuizEditor value={quiz} onChange={(value) => { setQuiz(value); fieldError('quiz', '') }} disabled={saving} error={errors.quiz} />
       {error && <p className="av-error" role="alert">{error}</p>}
       <footer className="av-form-actions"><button className="av-button" type="button" disabled={saving} onClick={() => navigate('/admin/videos')}>취소</button><button className={`av-button ${editing ? 'av-dark' : 'av-primary'}`} type="submit" disabled={saving}>{saving ? stage : editing ? '수정하기' : '등록'}</button></footer>
     </form>}
-    {picker && <TagPicker tags={tags} selected={form.tagIds} onTagsChange={setTags} onSelectionChange={(ids) => change({ tagIds: ids })} onClose={() => setPicker(false)} onUnauthorized={unauthorized} />}
+    {picker && !tagsDisabled && <TagPicker tags={tags} selected={form.tagIds} onTagsChange={setTags} onSelectionChange={(ids) => change({ tagIds: ids })} onClose={() => setPicker(false)} onUnauthorized={unauthorized} />}
   </div>
 }
