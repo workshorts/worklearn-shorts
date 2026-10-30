@@ -19,9 +19,25 @@
 .feed-video-card { position: relative; width: var(--feed-video-width); max-width: 100%; min-width: 0; color: white; }
 .feed-video-frame { position: relative; height: var(--feed-video-height); overflow: hidden; isolation: isolate; border-radius: 18px; background: #10151e; box-shadow: 0 4px 15px #171e2a15; }
 .feed-video-player { display: block; width: 100%; height: 100%; object-fit: cover; background: #10151e; }
-/* 다음 단계의 재생 제어 구현 전까지 기본 영상 컨트롤을 유지 */
-.feed-video-shade { position: absolute; inset: 0 0 54px; pointer-events: none; background: linear-gradient(180deg, #0003, transparent 30%, transparent 45%, #0005 68%, #000b 100%); }
-.feed-video-info { position: absolute; bottom: 76px; left: 20px; right: 20px; pointer-events: none; text-shadow: 0 2px 4px #0005; }
+.feed-video-shade { position: absolute; z-index: 1; inset: 0; pointer-events: none; background: linear-gradient(180deg, #0003, transparent 30%, transparent 45%, #0005 68%, #000b 100%); }
+.feed-video-info { position: absolute; z-index: 3; bottom: 76px; left: 20px; right: 20px; pointer-events: none; text-shadow: 0 2px 4px #0005; }
+.feed-player-shell { position: absolute; inset: 0; }
+.feed-player-shell button { font: inherit; color: inherit; cursor: pointer; }
+.feed-video-toggle { position: absolute; z-index: 2; inset: 0; display: grid; place-items: center; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; }
+.feed-play-symbol { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: #0006; }
+.feed-play-symbol svg { width: 32px; height: 32px; }
+.feed-video-toggle.is-playing .feed-play-symbol { opacity: 0; }
+.feed-video-toggle.is-playing:focus-visible .feed-play-symbol { opacity: 1; }
+.feed-sound-button { position: absolute; z-index: 4; top: 20px; right: 18px; display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid #ffffff20; border-radius: 50%; background: #20252e90; backdrop-filter: blur(8px); }
+.feed-sound-button svg { width: 22px; height: 22px; }
+.feed-video-controls { position: absolute; z-index: 4; bottom: 14px; left: 18px; right: 18px; display: grid; gap: 4px; }
+.feed-time-label { font-size: 11px; line-height: 1.6; color: #e3e6ef; font-variant-numeric: tabular-nums; }
+.feed-seek { display: block; width: 100%; height: 22px; margin: 0; accent-color: #8288ff; cursor: pointer; }
+.feed-seek:disabled { opacity: .4; cursor: default; }
+.feed-player-notice, .feed-player-loading { position: absolute; z-index: 3; top: calc(50% + 46px); left: 14px; right: 14px; margin: 0; text-align: center; font-size: 12px; line-height: 1.7; pointer-events: none; text-shadow: 0 1px 4px #000; }
+.feed-player-error { position: absolute; z-index: 8; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; background: #111925ed; text-align: center; font-size: 14px; }
+.feed-player-error p { margin: 0; line-height: 1.7; }
+.feed-player-error button { padding: 9px 18px; background: #ffffff15; border: 1px solid #ffffff50; border-radius: 6px; }
 .feed-video-info h2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0 0 8px; font-size: 19px; font-weight: 800; line-height: 1.5; letter-spacing: -.5px; overflow-wrap: anywhere; word-break: keep-all; }
 .feed-video-info p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0; color: #e0e2e7; font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
 .feed-video-tags { display: flex; flex-wrap: wrap; gap: 6px 10px; max-height: 48px; overflow: hidden; padding: 0; margin: 12px 0 0; list-style: none; color: #e1e4ff; font-size: 12px; line-height: 1.7; }
