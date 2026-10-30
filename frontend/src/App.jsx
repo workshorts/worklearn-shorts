@@ -5,6 +5,7 @@ import AdminAccess from './components/admin/AdminAccess.jsx'
 import AdminVideos from './pages/admin/AdminVideos.jsx'
 import AdminVideoForm from './pages/admin/AdminVideoForm.jsx'
 import AdminCourses from './pages/admin/AdminCourses.jsx'
+import FeedScreen from './pages/learner/FeedScreen.jsx'
 
 export default function App() {
   const [pathname, setPathname] = useState(window.location.pathname)
@@ -48,7 +49,8 @@ export default function App() {
     )
   }
 
-  // The learner-facing home will be implemented by its owner.
+  if (pathname === '/') return <FeedScreen />
+
   return (
     <main style={{ padding: 32 }}>
       <h1>스킬클립</h1>
