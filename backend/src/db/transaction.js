@@ -1,13 +1,17 @@
 import { types } from 'node:util'
 import { closeDatabase } from './connection.js'
 
-// Callbacks must perform synchronous DB work and leave transaction control here.
-export function withTransaction(database, callback, { mode = 'IMMEDIATE' } = {}) {
+export function assertSynchronousTransactionCallback(callback) {
   if (typeof callback !== 'function' || types.isAsyncFunction(callback) ||
       types.isGeneratorFunction(callback) ||
       Object.prototype.toString.call(callback) !== '[object Function]') {
     throw new TypeError('Transaction callbacks must be synchronous functions.')
   }
+}
+
+// Callbacks must perform synchronous DB work and leave transaction control here.
+export function withTransaction(database, callback, { mode = 'IMMEDIATE' } = {}) {
+  assertSynchronousTransactionCallback(callback)
 
   if (mode !== 'IMMEDIATE' && mode !== 'DEFERRED') {
     throw new TypeError('Transaction mode must be IMMEDIATE or DEFERRED.')
