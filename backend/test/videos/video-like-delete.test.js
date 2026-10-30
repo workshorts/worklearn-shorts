@@ -35,6 +35,10 @@ function assertReady(database) {
   assert.equal(database.isOpen, true)
 }
 
+function assertRemoved(database, id, visitorId, likeCount) {
+  assert.deepEqual(removeVideoLike(database, { id, visitorId }), { videoId: id, likeCount, likedByMe: false })
+}
+
 test('deletion removes only the bound video and visitor pair and preserves all remaining rows and times', t => {
   const { database, path, videoId, visitorId } = setup(t)
   const otherId = database.prepare('INSERT INTO videos (title, video_path) VALUES (?, ?)')
@@ -44,7 +48,7 @@ test('deletion removes only the bound video and visitor pair and preserves all r
     insert.run(id, visitor, '2001-02-03T04:05:06.000Z')
   }
   const before = snapshot(database, path)
-  assert.equal(removeVideoLike(database, { id: videoId, visitorId }).changes, 1)
+  assertRemoved(database, videoId, visitorId, 1)
   assertReady(database)
   const after = snapshot(database, path)
   assert.deepEqual(after.rows.video_likes,
@@ -55,16 +59,16 @@ test('deletion removes only the bound video and visitor pair and preserves all r
   assert.deepEqual(after.schema, before.schema)
 })
 
-test('an absent pair and repeated deletion return zero changes without changing the database file', t => {
+test('an absent pair and repeated deletion return the current count without changing the database file', t => {
   const { database, path, videoId, visitorId } = setup(t)
   const before = snapshot(database, path)
-  assert.equal(removeVideoLike(database, { id: videoId, visitorId: visitorB }).changes, 0)
+  assertRemoved(database, videoId, visitorB, 1)
   assertReady(database)
   assert.deepEqual(snapshot(database, path), before)
-  assert.equal(removeVideoLike(database, { id: videoId, visitorId }).changes, 1)
+  assertRemoved(database, videoId, visitorId, 0)
   const saved = snapshot(database, path)
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    assert.equal(removeVideoLike(database, { id: videoId, visitorId }).changes, 0)
+    assertRemoved(database, videoId, visitorId, 0)
     assertReady(database)
     assert.deepEqual(snapshot(database, path), saved)
   }
@@ -124,7 +128,7 @@ test('the maximum video ID and visitor are bound on the same active connection b
     }
     return statement
   })
-  assert.equal(removeVideoLike(database, { id, visitorId: visitorA }).changes, 1)
+  assertRemoved(database, id, visitorA, 0)
   assert.deepEqual(parameters, [[id, visitorA]])
   assert.deepEqual(commands, ['BEGIN IMMEDIATE', 'COMMIT'])
   assertReady(database)
@@ -148,8 +152,8 @@ test('a native trigger failure restores the deleted like and earlier trigger wri
     assertReady(database)
     assert.deepEqual(snapshot(database, path), before)
   } finally { database.exec('DROP TRIGGER test_like_delete_failure') }
-  assert.equal(removeVideoLike(database, { id: videoId, visitorId }).changes, 1)
-  assert.equal(removeVideoLike(database, { id: videoId, visitorId }).changes, 0)
+  assertRemoved(database, videoId, visitorId, 0)
+  assertRemoved(database, videoId, visitorId, 0)
 })
 
 test('a failed delete commit preserves the error and restores the original row identity and timestamp', t => {
@@ -166,8 +170,8 @@ test('a failed delete commit preserves the error and restores the original row i
   } finally { fault.mock.restore() }
   assertReady(database)
   assert.deepEqual(snapshot(database, path), before)
-  assert.equal(removeVideoLike(database, { id: videoId, visitorId }).changes, 1)
-  assert.equal(removeVideoLike(database, { id: videoId, visitorId }).changes, 0)
+  assertRemoved(database, videoId, visitorId, 0)
+  assertRemoved(database, videoId, visitorId, 0)
 })
 
 test('the raw delete leaves commit ownership to the caller and another connection sees only committed deletion', t => {
@@ -187,22 +191,22 @@ test('the raw delete leaves commit ownership to the caller and another connectio
   assertReady(database)
   assert.deepEqual(snapshot(database, path), before)
   assert.equal(readPair(other), 1)
-  assert.equal(removeVideoLike(database, { id: videoId, visitorId }).changes, 1)
+  assertRemoved(database, videoId, visitorId, 0)
   assert.equal(readPair(other), 0)
 })
 
 test('committed deletion stays absent across independent writer connections and reopening', t => {
   const { context, path, database, videoId, visitorId } = setup(t)
-  assert.equal(removeVideoLike(database, { id: videoId, visitorId }).changes, 1)
+  assertRemoved(database, videoId, visitorId, 0)
   const saved = snapshot(database, path)
   const other = context.open(path)
-  assert.equal(removeVideoLike(other, { id: videoId, visitorId }).changes, 0)
+  assertRemoved(other, videoId, visitorId, 0)
   assertReady(other)
   assert.deepEqual(snapshot(other, path), saved)
   database.close()
   other.close()
   const reopened = context.open(path)
-  assert.equal(removeVideoLike(reopened, { id: videoId, visitorId }).changes, 0)
+  assertRemoved(reopened, videoId, visitorId, 0)
   assertReady(reopened)
   assert.deepEqual(snapshot(reopened, path), saved)
   assert.equal(reopened.prepare('PRAGMA integrity_check').get().integrity_check, 'ok')

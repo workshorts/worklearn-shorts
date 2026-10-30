@@ -14,6 +14,9 @@ export function addVideoLike(database, { id, visitorId }) {
 
 // An absent pair is successful after the shared boundary confirms the video exists.
 export function removeVideoLike(database, { id, visitorId }) {
-  return withVideoWriteTransaction(database, id, connection =>
-    deleteVideoLike(connection, { videoId: id, visitorId }))
+  return withVideoWriteTransaction(database, id, connection => {
+    deleteVideoLike(connection, { videoId: id, visitorId })
+    const likeCount = countVideoLikes(connection, id)
+    return { videoId: id, likeCount, likedByMe: false }
+  })
 }
