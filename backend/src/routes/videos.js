@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { getDb } from '../db/client.js'
 import { validateVideoListRequest } from '../middleware/validateVideoListRequest.js'
+import { validateVideoLikeRequest } from '../middleware/validateVideoLikeRequest.js'
 import { validateVideoViewRequest } from '../middleware/validateVideoViewRequest.js'
 import { loadVideoDetail, loadVideoList } from '../services/video-read.js'
 import { recordVideoView } from '../services/video-view.js'
@@ -8,6 +9,11 @@ import { parseResourceId } from '../utils/resource-id.js'
 import { readOptionalVisitorId } from '../utils/visitor-id.js'
 
 export const videosRouter = Router()
+
+// Share input validation while the write operations and responses are added separately.
+videosRouter.route('/:id/like')
+  .put(validateVideoLikeRequest)
+  .delete(validateVideoLikeRequest)
 
 // Validate before opening the database and send success only after the service commits.
 videosRouter.post('/:id/view', validateVideoViewRequest, (req, res) => {
