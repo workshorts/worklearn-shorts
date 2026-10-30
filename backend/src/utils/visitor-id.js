@@ -29,3 +29,10 @@ export function readOptionalVisitorId(req) {
 
   return parseVisitorId(req.headers['x-visitor-id'])
 }
+
+export function readRequiredVisitorId(req) {
+  // Reuse normalization and duplicate detection; only header absence differs.
+  const visitorId = readOptionalVisitorId(req)
+  if (visitorId === null) throw invalidVisitorId()
+  return visitorId
+}
