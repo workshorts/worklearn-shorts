@@ -35,6 +35,10 @@ function assertReady(database) {
   assert.equal(database.isOpen, true)
 }
 
+function assertAdded(database, id, visitorId, likeCount) {
+  assert.deepEqual(addVideoLike(database, { id, visitorId }), { videoId: id, likeCount, likedByMe: true })
+}
+
 function assertNativeFailure(operation, code) {
   assert.throws(operation, error => {
     assert.equal(error instanceof ApiError, false)
@@ -52,7 +56,7 @@ function secondVideo(database) {
 test('a like is added once and duplicates preserve its row, original time, unrelated data and database file', t => {
   const { database, path, videoId } = setup(t)
   const before = snapshot(database, path)
-  assert.equal(addVideoLike(database, { id: videoId, visitorId: visitorA }).changes, 1)
+  assertAdded(database, videoId, visitorA, 2)
   assertReady(database)
   const inserted = snapshot(database, path)
   const pair = row => row.video_id === videoId && row.visitor_id === visitorA
@@ -66,7 +70,7 @@ test('a like is added once and duplicates preserve its row, original time, unrel
     .run('2001-02-03T04:05:06.000Z', videoId, visitorA)
   const saved = snapshot(database, path)
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    assert.equal(addVideoLike(database, { id: videoId, visitorId: visitorA }).changes, 0)
+    assertAdded(database, videoId, visitorA, 2)
     assertReady(database)
     assert.deepEqual(snapshot(database, path), saved)
   }
@@ -77,13 +81,13 @@ test('different video and visitor pairs are independent and never add a view', t
   const otherId = secondVideo(database)
   const before = snapshot(database, path)
   const pairs = [[videoId, visitorA], [videoId, visitorB], [otherId, visitorA]]
-  for (const [id, visitor] of pairs) {
-    assert.equal(addVideoLike(database, { id, visitorId: visitor }).changes, 1)
+  for (const [index, [id, visitor]] of pairs.entries()) {
+    assertAdded(database, id, visitor, [2, 3, 1][index])
     assertReady(database)
   }
   const saved = snapshot(database, path)
   for (const [id, visitor] of pairs) {
-    assert.equal(addVideoLike(database, { id, visitorId: visitor }).changes, 0)
+    assertAdded(database, id, visitor, id === videoId ? 3 : 1)
     assertReady(database)
     assert.deepEqual(snapshot(database, path), saved)
   }
@@ -158,8 +162,8 @@ test('a later native error rolls back the like before a new retry can commit', t
   }), 787)
   assertReady(database)
   assert.deepEqual(snapshot(database, path), before)
-  assert.equal(addVideoLike(database, { id: videoId, visitorId: visitorA }).changes, 1)
-  assert.equal(addVideoLike(database, { id: videoId, visitorId: visitorA }).changes, 0)
+  assertAdded(database, videoId, visitorA, 2)
+  assertAdded(database, videoId, visitorA, 2)
 })
 
 test('a failed like commit is rolled back and preserves the original error before recovery', t => {
@@ -176,23 +180,23 @@ test('a failed like commit is rolled back and preserves the original error befor
   } finally { fault.mock.restore() }
   assertReady(database)
   assert.deepEqual(snapshot(database, path), before)
-  assert.equal(addVideoLike(database, { id: videoId, visitorId: visitorA }).changes, 1)
-  assert.equal(addVideoLike(database, { id: videoId, visitorId: visitorA }).changes, 0)
+  assertAdded(database, videoId, visitorA, 2)
+  assertAdded(database, videoId, visitorA, 2)
 })
 
 test('committed likes remain duplicates across independent connections and reopening', t => {
   const { context, path, database, videoId } = setup(t)
-  assert.equal(addVideoLike(database, { id: videoId, visitorId: visitorA }).changes, 1)
+  assertAdded(database, videoId, visitorA, 2)
   const saved = snapshot(database, path)
   const other = context.open(path)
-  assert.equal(addVideoLike(other, { id: videoId, visitorId: visitorA }).changes, 0)
+  assertAdded(other, videoId, visitorA, 2)
   assertReady(other)
   assert.deepEqual(snapshot(other, path), saved)
   assert.deepEqual(snapshot(database, path), saved)
   database.close()
   other.close()
   const reopened = context.open(path)
-  assert.equal(addVideoLike(reopened, { id: videoId, visitorId: visitorA }).changes, 0)
+  assertAdded(reopened, videoId, visitorA, 2)
   assertReady(reopened)
   assert.deepEqual(snapshot(reopened, path), saved)
   assert.equal(reopened.prepare('PRAGMA integrity_check').get().integrity_check, 'ok')
