@@ -1,4 +1,4 @@
-import { insertVideoLike } from '../db/video-like-writes.js'
+import { deleteVideoLike, insertVideoLike } from '../db/video-like-writes.js'
 import { countVideoLikes } from '../db/video-like-queries.js'
 import { withVideoWriteTransaction } from './video-write.js'
 
@@ -10,4 +10,10 @@ export function addVideoLike(database, { id, visitorId }) {
     // The pair exists after either insertion or a skipped duplicate.
     return { videoId: id, likeCount, likedByMe: true }
   })
+}
+
+// An absent pair is successful after the shared boundary confirms the video exists.
+export function removeVideoLike(database, { id, visitorId }) {
+  return withVideoWriteTransaction(database, id, connection =>
+    deleteVideoLike(connection, { videoId: id, visitorId }))
 }
