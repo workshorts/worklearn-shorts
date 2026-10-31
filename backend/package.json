@@ -10,6 +10,7 @@
     "db:seed": "node db/seed.js",
     "test": "node --test --test-reporter=spec --test-concurrency=1 \"test/**/*.test.js\"",
     "test:db": "node --test --test-reporter=spec --test-concurrency=1 \"test/db/*.test.js\"",
+    "test:regression": "node scripts/test-regression.js",
     "admin:create": "node scripts/create-admin.js",
     "db:seed:courses": "node db/seed-courses.js"
   },

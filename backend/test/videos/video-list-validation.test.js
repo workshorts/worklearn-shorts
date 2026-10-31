@@ -8,6 +8,7 @@ const visitorId = 'aabbccdd-eeff-4abc-8def-012345abcdef'
 const fields = {
   page: '페이지는 1 이상 9007199254740991 이하의 정수로 입력하세요.',
   limit: '페이지당 항목 수는 1 이상 50 이하의 정수로 입력하세요.',
+  tagId: 'tagId는 1 이상 9007199254740991 이하의 정수로 입력하세요.',
   visitorId: '방문자 ID는 올바른 UUID 형식으로 입력하세요.',
 }
 
@@ -21,10 +22,14 @@ function input(query, visitor) {
 
 test('video list validation passes complete defaults and normalized values to the next handler without mutating inputs', () => {
   for (const [req, expected] of [
-    [input({}), { page: 1, limit: 20, visitorId: null }],
-    [input({ page: '0002' }), { page: 2, limit: 20, visitorId: null }],
-    [input({ limit: '050' }, visitorId.toUpperCase()), { page: 1, limit: 50, visitorId }],
-    [input({ page: '9007199254740991', limit: '1' }), { page: Number.MAX_SAFE_INTEGER, limit: 1, visitorId: null }],
+    [input({}), { page: 1, limit: 20, tagId: null, visitorId: null }],
+    [input({ page: '0002' }), { page: 2, limit: 20, tagId: null, visitorId: null }],
+    [input({ limit: '050' }, visitorId.toUpperCase()), { page: 1, limit: 50, tagId: null, visitorId }],
+    [input({ page: '9007199254740991', limit: '1' }), { page: Number.MAX_SAFE_INTEGER, limit: 1, tagId: null, visitorId: null }],
+    [input({ tagId: '1' }), { page: 1, limit: 20, tagId: 1, visitorId: null }],
+    [input({ page: '0002', limit: '050', tagId: '0007' }, visitorId.toUpperCase()), { page: 2, limit: 50, tagId: 7, visitorId }],
+    [input({ tagId: '9007199254740991' }), { page: 1, limit: 20, tagId: Number.MAX_SAFE_INTEGER, visitorId: null }],
+    [input({ tagId: '0009007199254740991' }), { page: 1, limit: 20, tagId: Number.MAX_SAFE_INTEGER, visitorId: null }],
   ]) {
     const res = { locals: { existing: 'preserved' } }
     let calls = 0
@@ -37,7 +42,8 @@ test('video list validation passes complete defaults and normalized values to th
 test('video list validation does not publish partial inputs or continue when a later field fails', () => {
   for (const [req, field] of [
     [input({ page: '2', limit: '51' }), 'limit'],
-    [input({ page: '2', limit: '20' }, 'invalid-private-visitor'), 'visitorId'],
+    [input({ page: '2', limit: '20', tagId: '0' }), 'tagId'],
+    [input({ page: '2', limit: '20', tagId: '7' }, 'invalid-private-visitor'), 'visitorId'],
   ]) {
     const res = { locals: { existing: 'preserved' } }
     assert.throws(() => validateVideoListRequest(req, res, () => assert.fail('Rejected input must not continue')), error => {
@@ -50,7 +56,23 @@ test('video list validation does not publish partial inputs or continue when a l
   }
 })
 
-test('the public video list path validates real parsed query and header input before database access', async t => {
+test('invalid optional tag IDs never continue or publish partially validated list input', () => {
+  for (const value of ['', '0', '-1', '+1', '1.5', '1e2', '0x10', ' 1', '1 ', '１', '1;DROP',
+    '9007199254740992', '9'.repeat(400), null, 1, true, ['1'], ['1', '1'], ['1', '2'], {}]) {
+    const res = { locals: { existing: 'preserved' } }
+    assert.throws(() => validateVideoListRequest(input({ page: '2', limit: '20', tagId: value }), res,
+      () => assert.fail('Invalid tags must stop before the list handler')), error => {
+      assert.ok(error instanceof ApiError)
+      assert.equal(error.status, 400)
+      assert.equal(error.code, 'VALIDATION_ERROR')
+      assert.deepEqual(error.fields, { tagId: fields.tagId })
+      return true
+    })
+    assert.deepEqual(res.locals, { existing: 'preserved' })
+  }
+})
+
+test('the public video list path validates real parsed query and header input before database access', { timeout: 30000 }, async t => {
   const { request, getDb } = await startAuthServer(t, { uploads: true })
   const database = getDb()
 
@@ -93,10 +115,39 @@ test('the public video list path validates real parsed query and header input be
     assert.equal(observed.mock.callCount(), 0)
   })
 
+  await t.test('blank, invalid and duplicate tag parameters return the shared tag error before SQL or transactions', async subtest => {
+    const prepare = database.prepare.bind(database)
+    const exec = database.exec.bind(database)
+    const prepared = subtest.mock.method(database, 'prepare', (...args) => prepare(...args))
+    const executed = subtest.mock.method(database, 'exec', (...args) => exec(...args))
+    try {
+      for (const query of ['tagId', 'tagId=', 'tagId=0', 'tagId=-1', 'tagId=%2B1', 'tagId=1.5', 'tagId=abc',
+        'tagId=1e2', 'tagId=0x10', 'tagId=9007199254740992', 'tagId=1&tagId=1', 'tagId=1&tagId=2',
+        'tagId=%20', 'tagId=%201', 'tagId=1%20', 'tagId=%EF%BC%91', 'tagId=1%3BDROP', 'tagId=' + '9'.repeat(400)]) {
+        await reject('/api/videos?page=2&limit=20&' + query, 'tagId')
+      }
+      assert.equal(prepared.mock.callCount(), 0)
+      assert.equal(executed.mock.callCount(), 0)
+    } finally {
+      prepared.mock.restore()
+      executed.mock.restore()
+    }
+  })
+
+  await t.test('omitted and valid optional tag IDs pass the actual query parser without changing the list envelope', async () => {
+    // Valid tags may have no matching videos, so the normal empty page envelope still applies.
+    for (const query of ['', '?tagId=1', '?tagId=0007', '?tagId=9007199254740991']) {
+      const response = await request('/api/videos' + query, { headers: { 'X-Visitor-Id': visitorId.toUpperCase() } })
+      assert.equal(response.status, 200)
+      assert.deepEqual(response.json, { data: [], page: 1, limit: 20, total: 0 })
+      assert.equal(response.headers['set-cookie'], undefined)
+    }
+  })
+
   await t.test('list validation does not apply list query rules to the separate detail endpoint', async () => {
     const id = database.prepare('INSERT INTO videos (title, video_path) VALUES (?, ?)')
       .run('Independent detail video', 'videos/10000000-0000-4000-8000-000000000001.mp4').lastInsertRowid
-    const response = await request(`/api/videos/${id}?page=0&limit=51`)
+    const response = await request(`/api/videos/${id}?page=0&limit=51&tagId=invalid`)
     assert.equal(response.status, 200)
     assert.equal(response.json.id, id)
   })

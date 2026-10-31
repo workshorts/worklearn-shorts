@@ -7,6 +7,7 @@ import { adminAuthRouter } from './routes/adminAuth.js'
 import { adminUploadsRouter } from './routes/adminUploads.js'
 import { adminVideosRouter } from './routes/adminVideos.js'
 import { coursesRouter } from './routes/courses.js'
+import { tagsRouter } from './routes/tags.js'
 import { videosRouter } from './routes/videos.js'
 
 export const app = express()
@@ -26,6 +27,7 @@ app.use('/api/admin/videos', adminVideosRouter)
 
 // 사용자 API
 app.use('/api/courses', coursesRouter)
+app.use('/api/tags', tagsRouter)
 app.use('/api/videos', videosRouter)
 
 // 없는 주소
