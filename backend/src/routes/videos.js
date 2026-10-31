@@ -30,8 +30,8 @@ videosRouter.post('/:id/view', validateVideoViewRequest, (req, res) => {
 
 // Public list requests validate input before opening or querying the database.
 videosRouter.get('/', validateVideoListRequest, (req, res) => {
-  const { page, limit, visitorId } = res.locals.videoListRequest
-  const { data, total } = loadVideoList(getDb(), { page, limit, visitorId })
+  const { page, limit, tagId, visitorId } = res.locals.videoListRequest
+  const { data, total } = loadVideoList(getDb(), { page, limit, tagId, visitorId })
   res.json({ data, page, limit, total })
 })
 

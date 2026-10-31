@@ -3,11 +3,11 @@ import { loadVideos } from '../db/video-queries.js'
 import { countVideos, loadVideoPageIds } from '../db/video-page-queries.js'
 import { errors } from '../errors.js'
 
-// Callers validate pagination and the optional visitor header before invoking this service.
-export function loadVideoList(database, { page, limit, visitorId = null }) {
+// Callers validate pagination, the optional tag ID and visitor header before invoking this service.
+export function loadVideoList(database, { page, limit, tagId = null, visitorId = null }) {
   return withTransaction(database, connection => {
-    const total = countVideos(connection)
-    const ids = loadVideoPageIds(connection, { page, limit })
+    const total = countVideos(connection, { tagId })
+    const ids = loadVideoPageIds(connection, { page, limit, tagId })
     const data = ids.length === 0 ? [] : loadVideos(connection, {
       where: `WHERE v.id IN (${ids.map(() => '?').join(', ')})`,
       params: ids,

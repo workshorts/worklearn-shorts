@@ -10,6 +10,8 @@ export function loadVideoPageIds(database, { page, limit, tagId = null }) {
     .all(...filterParams, limit, offset).map(row => row.id)
 }
 
-export function countVideos(database) {
-  return database.prepare('SELECT COUNT(*) AS total FROM videos').get().total
+export function countVideos(database, { tagId = null } = {}) {
+  const where = tagId === null ? '' : TAG_FILTER
+  const filterParams = tagId === null ? [] : [tagId]
+  return database.prepare(`SELECT COUNT(*) AS total FROM videos ${where}`).get(...filterParams).total
 }

@@ -135,7 +135,7 @@ test('the public video list path validates real parsed query and header input be
   })
 
   await t.test('omitted and valid optional tag IDs pass the actual query parser without changing the list envelope', async () => {
-    // Filtering and filtered totals are connected in later plan items; this step validates input only.
+    // Valid tags may have no matching videos, so the normal empty page envelope still applies.
     for (const query of ['', '?tagId=1', '?tagId=0007', '?tagId=9007199254740991']) {
       const response = await request('/api/videos' + query, { headers: { 'X-Visitor-Id': visitorId.toUpperCase() } })
       assert.equal(response.status, 200)
