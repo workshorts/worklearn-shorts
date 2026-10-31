@@ -11,6 +11,7 @@ import { insertMinimalFixture } from '../helpers/minimal-fixture.js'
 
 const visitorA = 'aabbccdd-eeff-4abc-8def-012345abcdef'
 const visitorB = '12345678-abcd-4abc-9def-012345abcdef'
+const visitorC = 'aabbccdd-eeff-4abc-8def-012345abcdee'
 const tables = ['admins', 'videos', 'tags', 'courses', 'course_videos', 'video_tags',
   'video_views', 'video_likes', 'comments', 'quizzes', 'quiz_options', 'sqlite_sequence']
 
@@ -73,7 +74,7 @@ function startWorker(context, databasePath, uploadDir) {
 function request(port, path, method = 'GET', visitorId = visitorA) {
   return new Promise((resolve, reject) => {
     const req = http.request({ host: '127.0.0.1', port, path, method, agent: false,
-      headers: { 'X-Visitor-Id': visitorId } }, res => {
+      headers: visitorId === null ? {} : { 'X-Visitor-Id': visitorId } }, res => {
       const chunks = []
       res.on('error', reject)
       res.on('data', chunk => chunks.push(chunk))
@@ -88,12 +89,16 @@ function request(port, path, method = 'GET', visitorId = visitorA) {
   })
 }
 
-test('independent HTTP processes serialize concurrent like additions and cancellations without duplicate or negative counts', { timeout: 30000 }, async t => {
+test('independent HTTP processes serialize like mutations and expose their final state consistently through paged lists and details', { timeout: 30000 }, async t => {
   const context = createDatabaseContext(t)
   const databasePath = context.path('shared-likes.db')
   context.initialize(databasePath)
   const database = context.open(databasePath)
-  insertMinimalFixture(database)
+  const fixture = insertMinimalFixture(database)
+  database.prepare('UPDATE videos SET video_path = ? WHERE id = ?')
+    .run('videos/30000000-0000-4000-8000-000000000001.mp4', fixture.videoId)
+  database.prepare('INSERT INTO videos (id, title, video_path) VALUES (?, ?, ?)')
+    .run(4, 'Never liked control', 'videos/30000000-0000-4000-8000-000000000004.webm')
   const uploadDir = context.path('uploads')
   mkdirSync(uploadDir)
   const targets = [2, 3, Number.MAX_SAFE_INTEGER]
@@ -150,6 +155,48 @@ test('independent HTTP processes serialize concurrent like additions and cancell
     }
     assert.deepEqual(snapshot(), before)
     return expected
+  }
+
+  async function assertPagedFinalReads() {
+    // Read only after all writers finish; response arrival order does not identify the last commit.
+    const before = snapshot()
+    const begins = workers.map(worker => worker.begins)
+    const ids = database.prepare('SELECT id FROM videos ORDER BY id DESC').all().map(row => row.id)
+    assert.deepEqual(ids, [Number.MAX_SAFE_INTEGER, 4, 3, 2, fixture.videoId])
+    const expected = new Map(ids.map(id => [id, before.rows.video_likes.filter(row => row.video_id === id)]))
+    const commonVideos = new Map()
+    for (const { port } of addresses) {
+      for (const visitor of [visitorA.toUpperCase(), visitorB, visitorC, null]) {
+        const normalized = visitor?.toLowerCase() ?? null
+        const collected = []
+        for (let page = 1; page <= 4; page += 1) {
+          const response = await request(port, `/api/videos?page=${page}&limit=2`, 'GET', visitor)
+          assert.equal(response.status, 200)
+          assert.deepEqual(Object.keys(response.json).sort(), ['data', 'limit', 'page', 'total'])
+          assert.equal(response.json.page, page)
+          assert.equal(response.json.limit, 2)
+          assert.equal(response.json.total, ids.length)
+          assert.deepEqual(response.json.data.map(video => video.id), ids.slice((page - 1) * 2, page * 2))
+          collected.push(...response.json.data)
+        }
+        assert.deepEqual(collected.map(video => video.id), ids)
+        for (const video of collected) {
+          const rows = expected.get(video.id)
+          assert.equal(video.likeCount, rows.length)
+          assert.equal(video.likedByMe, normalized !== null && rows.some(row => row.visitor_id === normalized))
+          const detail = await request(port, '/api/videos/000' + video.id, 'GET', visitor)
+          assert.equal(detail.status, 200)
+          assert.deepEqual(detail.json, video)
+          // Switching visitors can change only the personalized field, not the shared Video representation.
+          const { likedByMe, ...common } = video
+          if (commonVideos.has(video.id)) assert.deepEqual(common, commonVideos.get(video.id))
+          else commonVideos.set(video.id, common)
+        }
+      }
+    }
+    assert.deepEqual(snapshot(), before)
+    workers.forEach((worker, index) => assert.equal(worker.begins, begins[index]))
+    assert.equal(database.isTransaction, false)
   }
 
   async function contend(id, methods) {
@@ -221,12 +268,21 @@ test('independent HTTP processes serialize concurrent like additions and cancell
     }
   })
 
+  await t.test('after all competing writers finish every page and detail matches the final database for both visitors, a new visitor and anonymous readers', async () => {
+    await assertPagedFinalReads()
+  })
+
   await t.test('an ordered cancellation and addition after all competing requests produce deterministic final states', async () => {
     for (const id of targets) {
       const before = snapshot()
       assert.deepEqual(await request(addresses[0].port, `/api/videos/${id}/like`, 'DELETE'),
         { status: 200, json: { videoId: id, likeCount: 1, likedByMe: false } })
       assert.deepEqual(await assertFinalReads(id), { count: 1, liked: false })
+      assertUnrelatedPreserved(before, id)
+    }
+    await assertPagedFinalReads()
+    for (const id of targets) {
+      const before = snapshot()
       assert.deepEqual(await request(addresses[1].port, `/api/videos/${id}/like`, 'PUT'),
         { status: 200, json: { videoId: id, likeCount: 2, likedByMe: true } })
       assert.deepEqual(await assertFinalReads(id), { count: 2, liked: true })
@@ -234,6 +290,11 @@ test('independent HTTP processes serialize concurrent like additions and cancell
     }
     await Promise.all(workers.map(worker => worker.waitForBegins(111)))
     workers.forEach(worker => assert.equal(worker.begins, 111))
+  })
+
+  await t.test('reloading pages and details after ordered changes refreshes counts and personal flags without rewriting the database', async () => {
+    for (const id of targets) assert.deepEqual(readState(id), { count: 2, liked: true })
+    await assertPagedFinalReads()
   })
 
   await t.test('both processes exit cleanly without errors or leaked locks and the database remains consistent', async () => {
