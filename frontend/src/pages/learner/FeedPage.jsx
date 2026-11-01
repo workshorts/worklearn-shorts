@@ -5,7 +5,7 @@ import './feed.css'
 
 // header: 공통 헤더, filters: 태그 필터, renderActions: 조회수·좋아요 UI를 받을 자리.
 // 재생할 영상과 음소거 상태는 피드에서 공유, API 호출은 별도 모듈에서 처리
-export default function FeedPage({ videos, header, filters, renderActions, emptyContent, notice, onActiveVideoChange }) {
+export default function FeedPage({ videos, header, filters, renderActions, emptyContent, notice, onActiveVideoChange, onVideoWatched }) {
   const [muted, setMuted] = useState(true)
   const { listRef, activeId, activeIndex, goTo, move, onKeyDown } = useFeedNavigation(videos)
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function FeedPage({ videos, header, filters, renderActions, empty
       <div className="feed-video-list" ref={listRef} tabIndex={0} role="region" aria-label="영상 목록, 위아래 방향키로 이동" onKeyDown={onKeyDown}>
         {videos.length ? videos.map((video, index) => <div className="feed-video-slide" data-video-id={video.id} key={video.id}>
           <FeedVideoCard video={video} renderActions={renderActions}
-            isActive={video.id === activeId} muted={muted} onRequestPlay={() => goTo(index)} onMutedChange={setMuted} />
+            isActive={video.id === activeId} muted={muted} onRequestPlay={() => goTo(index)} onMutedChange={setMuted} onWatched={onVideoWatched} />
         </div>) : emptyContent || <p className="feed-empty">등록된 영상이 없습니다.</p>}
       </div>
       {!!videos.length && <>

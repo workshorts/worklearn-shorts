@@ -92,3 +92,15 @@
   .feed-state { color: #b0bbce; }
   .feed-load-notice { width: max-content; }
 }
+/* 좋아요 버튼·반응 수치 (useVideoReactions) */
+.feed-like-button { padding: 0; border: 0; background: none; color: inherit; cursor: pointer; border-radius: 50%; }
+.feed-like-button:disabled { cursor: progress; }
+.feed-like-button:focus-visible { outline: 2px solid #4f6bed; outline-offset: 2px; }
+.feed-like-button.is-liked { color: #ef4060; }
+.feed-like-button .feed-stat-icon { transition: transform .15s ease; }
+.feed-like-button:active .feed-stat-icon { transform: scale(.9); }
+.feed-stat-value { font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.feed-action-error { position: absolute; right: 0; bottom: calc(100% + 8px); width: max-content; max-width: 200px; margin: 0; padding: 6px 10px; border-radius: 6px; background: #1c2739ed; color: #fff; font-size: 11px; line-height: 1.6; }
+@media (max-width: 767px) {
+  .feed-like-button.is-liked { color: #ff5a78; }
+}
