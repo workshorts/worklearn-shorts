@@ -4,6 +4,7 @@ import { validateCommentListRequest } from '../middleware/validateCommentListReq
 import { validateVideoListRequest } from '../middleware/validateVideoListRequest.js'
 import { validateVideoLikeRequest } from '../middleware/validateVideoLikeRequest.js'
 import { validateVideoViewRequest } from '../middleware/validateVideoViewRequest.js'
+import { loadCommentList } from '../services/comment-read.js'
 import { loadVideoDetail, loadVideoList } from '../services/video-read.js'
 import { addVideoLike, removeVideoLike } from '../services/video-like.js'
 import { recordVideoView } from '../services/video-view.js'
@@ -12,8 +13,12 @@ import { readOptionalVisitorId } from '../utils/visitor-id.js'
 
 export const videosRouter = Router()
 
-// Validate public comment list input before the later parent and page queries.
-videosRouter.get('/:id/comments', validateCommentListRequest)
+// Send public comments only after the shared read snapshot commits.
+videosRouter.get('/:id/comments', validateCommentListRequest, (req, res) => {
+  const { id, page, limit } = res.locals.commentListRequest
+  const { data, total } = loadCommentList(getDb(), { id, page, limit })
+  res.json({ data, page, limit, total })
+})
 
 // Validate before opening the DB; both synchronous services return only after commit.
 videosRouter.route('/:id/like')
