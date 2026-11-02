@@ -13,3 +13,8 @@ export function loadCommentPage(database, { videoId, page, limit }) {
     WHERE video_id = ? ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`)
     .all(videoId, limit, offset)
 }
+
+// Count the same video's full collection independently of the requested page.
+export function countVideoComments(database, videoId) {
+  return database.prepare('SELECT COUNT(*) AS count FROM comments WHERE video_id = ?').get(videoId).count
+}
