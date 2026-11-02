@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { watchedDelta } from '../../lib/watchTime.js'
 
 function timeLabel(seconds) {
   const whole = Math.max(0, Math.floor(seconds || 0))
@@ -11,8 +12,10 @@ function PlayerIcon({ name }) {
   </svg>
 }
 
-export default function FeedVideoPlayer({ src, poster, title, isActive = false, muted = true, onRequestPlay, onMutedChange }) {
+// onWatched(seconds): 재생 중 실제로 본 시간을 조금씩 알려준다(조회수 집계용).
+export default function FeedVideoPlayer({ src, poster, title, isActive = false, muted = true, onRequestPlay, onMutedChange, onWatched }) {
   const videoRef = useRef(null)
+  const lastTime = useRef(null)
   const wantsPlay = useRef(false)
   const requestId = useRef(0)
   const [playing, setPlaying] = useState(false)
@@ -85,7 +88,15 @@ export default function FeedVideoPlayer({ src, poster, title, isActive = false, 
       onPlaying={() => setBuffering(false)} onWaiting={() => setBuffering(true)}
       onPause={() => { setPlaying(false); setBuffering(false) }}
       onLoadedMetadata={readDuration} onDurationChange={readDuration}
-      onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+      onTimeUpdate={(event) => {
+        const time = event.currentTarget.currentTime
+        setCurrentTime(time)
+        if (!event.currentTarget.paused && wantsPlay.current) {
+          const seconds = watchedDelta(lastTime.current, time)
+          if (seconds > 0) onWatched?.(seconds)
+        }
+        lastTime.current = time
+      }}
       onSeeked={() => setBuffering(false)}
       onError={() => { setError('영상을 불러오지 못했어요.'); setBuffering(false) }}
     />
