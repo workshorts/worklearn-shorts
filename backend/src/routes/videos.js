@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { getDb } from '../db/client.js'
+import { requireJson } from '../middleware/requireJson.js'
 import { validateCommentListRequest } from '../middleware/validateCommentListRequest.js'
 import { validateVideoListRequest } from '../middleware/validateVideoListRequest.js'
 import { validateVideoLikeRequest } from '../middleware/validateVideoLikeRequest.js'
@@ -19,6 +20,9 @@ videosRouter.get('/:id/comments', validateCommentListRequest, (req, res) => {
   const { data, total } = loadCommentList(getDb(), { id, page, limit })
   res.json({ data, page, limit, total })
 })
+
+// Enforce JSON before the later comment field validation, quota checks and storage.
+videosRouter.post('/:id/comments', requireJson)
 
 // Validate before opening the DB; both synchronous services return only after commit.
 videosRouter.route('/:id/like')

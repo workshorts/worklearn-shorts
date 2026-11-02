@@ -2,6 +2,7 @@ import express from 'express'
 import { config } from './config/index.js'
 import { errors } from './errors.js'
 import { errorHandler } from './middleware/errorHandler.js'
+import { parseJson } from './middleware/parseJson.js'
 import { requireAllowedOrigin } from './middleware/requireAllowedOrigin.js'
 import { adminAuthRouter } from './routes/adminAuth.js'
 import { adminUploadsRouter } from './routes/adminUploads.js'
@@ -15,7 +16,7 @@ export const app = express()
 // 관리자 변경 요청은 허용된 Origin에서 온 것만 받는다 (본문을 읽기 전에 확인)
 app.use('/api/admin', requireAllowedOrigin)
 
-app.use(express.json())
+app.use(parseJson)
 
 // 영상·썸네일 파일 제공 (영상 구간 재생도 자동 지원)
 app.use('/uploads', express.static(config.uploadDir, { index: false }))
