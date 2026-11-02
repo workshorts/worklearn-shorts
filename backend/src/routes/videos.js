@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { getDb } from '../db/client.js'
+import { validateCommentListRequest } from '../middleware/validateCommentListRequest.js'
 import { validateVideoListRequest } from '../middleware/validateVideoListRequest.js'
 import { validateVideoLikeRequest } from '../middleware/validateVideoLikeRequest.js'
 import { validateVideoViewRequest } from '../middleware/validateVideoViewRequest.js'
@@ -10,6 +11,9 @@ import { parseResourceId } from '../utils/resource-id.js'
 import { readOptionalVisitorId } from '../utils/visitor-id.js'
 
 export const videosRouter = Router()
+
+// Validate public comment list input before the later parent and page queries.
+videosRouter.get('/:id/comments', validateCommentListRequest)
 
 // Validate before opening the DB; both synchronous services return only after commit.
 videosRouter.route('/:id/like')
