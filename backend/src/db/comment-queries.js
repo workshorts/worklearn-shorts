@@ -5,3 +5,11 @@ export function assertCommentVideoExists(database, videoId) {
   const video = database.prepare('SELECT id FROM videos WHERE id = ?').get(videoId)
   if (video === undefined) throw errors.notFound('영상을 찾을 수 없습니다.')
 }
+
+// Return only public columns; callers own input validation and the shared read snapshot.
+export function loadCommentPage(database, { videoId, page, limit }) {
+  const offset = (BigInt(page) - 1n) * BigInt(limit)
+  return database.prepare(`SELECT id, video_id, nickname, content, created_at FROM comments
+    WHERE video_id = ? ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`)
+    .all(videoId, limit, offset)
+}
