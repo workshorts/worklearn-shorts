@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { getDb } from '../db/client.js'
+import { limitCommentCreateRequest } from '../middleware/commentRequestLimits.js'
 import { requireJson } from '../middleware/requireJson.js'
 import { validateCommentCreateRequest } from '../middleware/validateCommentCreateRequest.js'
 import { validateCommentListRequest } from '../middleware/validateCommentListRequest.js'
@@ -22,8 +23,8 @@ videosRouter.get('/:id/comments', validateCommentListRequest, (req, res) => {
   res.json({ data, page, limit, total })
 })
 
-// Validate JSON and complete input before the later quota checks and storage.
-videosRouter.post('/:id/comments', requireJson, validateCommentCreateRequest)
+// Invalid input consumes no quota; excessive attempts stop before hashing or storage.
+videosRouter.post('/:id/comments', requireJson, validateCommentCreateRequest, limitCommentCreateRequest)
 
 // Validate before opening the DB; both synchronous services return only after commit.
 videosRouter.route('/:id/like')
