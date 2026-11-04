@@ -4,7 +4,12 @@ import { adminPreview } from '../components/admin/adminPreview.js'
 // mock api와 실제 api는 동일한 형태의 Promise와 DTO 제공, 리액트 컴포넌트에서는 API 함수만 호출하도록 작성
 const mock = adminPreview ? import('./mockVideoApi.js') : null
 const call = (name, args, request) => mock ? mock.then((module) => module[name](...args)) : request()
-export const getVideos = (page = 1, signal) => call('getVideos', [page, signal], () => adminRequest(`videos?page=${page}&limit=20`, { signal }))
+// 세 번째 인수는 선택 사항이므로 학습과정 편집의 기존 getVideos(page, signal) 호출도 유지된다.
+export const getVideos = (page = 1, signal, tagId = null) => call('getVideos', [page, signal, tagId], () => {
+  const query = new URLSearchParams({ page: String(page), limit: '20' })
+  if (tagId !== null) query.set('tagId', String(tagId))
+  return adminRequest(`videos?${query}`, { signal })
+})
 export const getVideo = (id, signal) => call('getVideo', [id, signal], () => adminRequest(`videos/${id}`, { signal }))
 export const saveVideo = (id, data) => call('saveVideo', [id, data], () => adminRequest(id ? `videos/${id}` : 'videos', { method: id ? 'PATCH' : 'POST', body: JSON.stringify(data) }))
 export const deleteVideo = (id) => call('deleteVideo', [id], () => adminRequest(`videos/${id}`, { method: 'DELETE' }))

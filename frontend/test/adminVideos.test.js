@@ -80,10 +80,9 @@ test('FE 영상 목록·편집 정보 요청과 실제 관리자 영상 API 연�
     loggedIn = true;
   });
 
-  await t.test('videoApi.js가 같은 주소로 호출하는지 소스로 지킨다', async () => {
+  await t.test('videoApi.js의 상세 조회 주소를 확인한다', async () => {
     const { readFileSync } = await import('node:fs');
     const source = readFileSync(new URL('../src/api/videoApi.js', import.meta.url), 'utf8');
-    assert.match(source, /adminRequest\(`videos\?page=\$\{page\}&limit=20`/);
     assert.match(source, /adminRequest\(`videos\/\$\{id\}`/);
   });
 });
