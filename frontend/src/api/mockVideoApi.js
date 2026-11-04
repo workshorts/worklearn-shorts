@@ -33,9 +33,10 @@ const find = (id) => {
   return video
 }
 const dto = (video) => copy({ ...video, tags: tags.filter((tag) => video.tagIds.includes(tag.id)), hasQuiz: !!video.quiz })
-export async function getVideos(page, signal) {
+export async function getVideos(page = 1, signal, tagId = null) {
   await delay(signal)
-  return { data: videos.slice((page - 1) * 20, page * 20).map(dto), page, limit: 20, total: videos.length }
+  const filtered = tagId === null ? videos : videos.filter((video) => video.tagIds.includes(Number(tagId)))
+  return { data: filtered.slice((page - 1) * 20, page * 20).map(dto), page, limit: 20, total: filtered.length }
 }
 export async function getVideo(id, signal) { await delay(signal); return dto(find(id)) }
 export async function getTags(signal) { await delay(signal); return { data: copy(tags) } }

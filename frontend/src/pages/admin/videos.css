@@ -9,6 +9,15 @@
 .admin-heading > .av-button { width: 156px; height: 42px; flex-shrink: 0; font-size: 14px; font-weight: 500; }
 .av-button:disabled, .av-modal button:disabled { opacity: .45; cursor: not-allowed; }
 .av-actions, .av-inline { display: flex; gap: 8px; align-items: center; }
+/* 관리자 목록의 태그 필터 */
+.av-video-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 14px; }
+.av-video-filter label { font-weight: 600; }
+.av-video-filter select { min-height: 38px; width: 220px; max-width: 100%; padding: 8px 12px; border: 1px solid #d6deea; border-radius: 6px; background: white; color: #263449; font: inherit; }
+.av-video-filter select:focus-visible { outline: 2px solid #a7b3ff; outline-offset: 2px; }
+.av-video-filter select:disabled { color: #748198; background: #f0f3f8; cursor: not-allowed; }
+.av-filter-count { color: #697b96; }
+.av-filter-notice { margin-bottom: 16px; }
+.av-video-filter + p.av-hint { margin: 0 0 16px; }
 .av-table-scroll { overflow-x: auto; border: 1px solid #dde4ee; border-radius: 8px; background: white; }
 .av-video-table { border-collapse: collapse; width: 100%; font-size: 14px; text-align: left; }
 .av-video-table th { padding: 15px 18px; background: #f0f3f8; font-weight: 600; color: #5b6b83; white-space: nowrap; }
