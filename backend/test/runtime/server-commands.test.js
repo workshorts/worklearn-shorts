@@ -68,19 +68,24 @@ function startCommand(context, script, databasePath, uploadDir, port) {
   let stopping
   function stop() {
     if (!stopping) stopping = (async () => {
+      let terminationError
       if (child.exitCode === null && child.signalCode === null && child.pid) {
         if (process.platform === 'win32') {
           // Stop only this owned npm process tree, including the dev watcher and its server child.
-          await new Promise((resolveStopped, rejectStopped) => execFile('taskkill.exe',
+          await new Promise(resolveStopped => execFile('taskkill.exe',
             ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, timeout: 5000 }, error => {
-              if (error && child.exitCode === null && child.signalCode === null) rejectStopped(error)
-              else resolveStopped()
+              terminationError = error
+              resolveStopped()
             }))
         } else {
           process.kill(-child.pid, 'SIGTERM')
         }
       }
-      return bounded(finished, 5000, 'The owned package process did not stop.')
+      // A taskkill error can race with child exit; require actual pipe closure before accepting cleanup.
+      return bounded(finished, 5000, 'The owned package process did not stop.').catch(error => {
+        if (terminationError) throw new AggregateError([terminationError, error], 'The owned package process did not stop.')
+        throw error
+      })
     })()
     return stopping
   }
