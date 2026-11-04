@@ -9,6 +9,7 @@ import { validateCommentListRequest } from '../middleware/validateCommentListReq
 import { validateVideoListRequest } from '../middleware/validateVideoListRequest.js'
 import { validateVideoLikeRequest } from '../middleware/validateVideoLikeRequest.js'
 import { validateVideoViewRequest } from '../middleware/validateVideoViewRequest.js'
+import { createComment } from '../services/comment-create.js'
 import { loadCommentList } from '../services/comment-read.js'
 import { loadVideoDetail, loadVideoList } from '../services/video-read.js'
 import { addVideoLike, removeVideoLike } from '../services/video-like.js'
@@ -27,7 +28,10 @@ videosRouter.get('/:id/comments', validateCommentListRequest, (req, res) => {
 
 // Invalid input consumes no quota; excessive attempts stop before hashing or storage.
 videosRouter.post('/:id/comments', requireJson, validateCommentCreateRequest,
-  limitCommentCreateRequest, requireCommentVideo, hashCommentPassword)
+  limitCommentCreateRequest, requireCommentVideo, hashCommentPassword, (req, res) => {
+    const comment = createComment(getDb(), res.locals.commentCreateRequest)
+    res.status(201).json(comment)
+  })
 
 // Validate before opening the DB; both synchronous services return only after commit.
 videosRouter.route('/:id/like')

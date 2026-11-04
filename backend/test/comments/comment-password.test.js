@@ -105,12 +105,12 @@ test('registered comment POST hashes only admitted existing targets and keeps fa
     assert.equal(missing.status, 404)
     assert.equal(missing.json.message, '영상을 찾을 수 없습니다.')
     assert.equal(derivations.length, 0)
+    assert.deepEqual(snapshot(), before)
   })
 
   await t.test('an admitted parent derives once without a transaction and sends neither password nor hash to the client', async () => {
     const response = await post()
-    // Storage and its 201 handler are later plan items; admitted requests currently fall through.
-    assert.ok(response.status === 404 || response.status === 201)
+    assert.equal(response.status, 201)
     assert.equal(derivations.length, 1)
     const [password, salt, length, options] = derivations[0]
     assert.equal(password, payload.password)
@@ -124,16 +124,19 @@ test('registered comment POST hashes only admitted existing targets and keeps fa
   })
 
   await t.test('quota rejection prevents further derivation and invalid input still keeps its validation error', async () => {
+    const saved = snapshot()
     const blocked = await post()
     assert.equal(blocked.status, 429)
     assert.equal(blocked.headers['retry-after'], '2')
     assert.equal((await post(id, { body: {} })).status, 400)
     assert.equal(derivations.length, 1)
     assert.equal(log.mock.callCount(), 0)
+    assert.deepEqual(snapshot(), saved)
   })
 
   await t.test('native hash failure becomes the fixed 500, retains consumed quota and permits recovery after restoration', async subtest => {
     now += 2000
+    const saved = snapshot()
     const fault = new Error('private-password-hash-and-native-details')
     const undo = mockDerivation(subtest, () => { throw fault })
     try {
@@ -142,16 +145,23 @@ test('registered comment POST hashes only admitted existing targets and keeps fa
       assert.deepEqual(response.json, { code: 'INTERNAL_ERROR', message: '서버 오류가 발생했습니다.', fields: {} })
       assert.equal(response.headers['set-cookie'], undefined)
       assert.deepEqual(log.mock.calls.map(call => call.arguments), [['INTERNAL_ERROR']])
+      assert.deepEqual(snapshot(), saved)
     } finally {
       undo()
     }
     const recovered = await post()
-    assert.ok(recovered.status === 404 || recovered.status === 201)
+    assert.equal(recovered.status, 201)
     assert.equal(derivations.length, 2)
     assert.equal((await post()).status, 429)
     assert.equal(derivations.length, 2)
   })
   assert.equal(db.isOpen, true)
   assert.equal(db.isTransaction, false)
-  assert.deepEqual(snapshot(), before)
+  const after = snapshot()
+  assert.deepEqual(after.schema, before.schema)
+  for (const table of tables.filter(table => table !== 'comments' && table !== 'sqlite_sequence')) {
+    assert.deepEqual(after.rows[table], before.rows[table])
+  }
+  assert.equal(after.rows.comments.length, before.rows.comments.length + 2)
+  for (const row of after.rows.comments) assert.equal(verifyPassword(payload.password, row.password_hash), true)
 })

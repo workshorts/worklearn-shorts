@@ -51,7 +51,7 @@ test('comment creation enforces shared IP quotas after validation and before dow
     assert.match(response.headers['content-type'], /^application\/json\b/)
   }
   function expectAdmitted(response) {
-    // Persistence is connected in later plan items; here the request must pass the quota.
+    // Admitted requests either create a comment or reject an absent parent after consuming quota.
     assert.ok(response.status === 404 || response.status === 201)
     assert.equal(response.headers['retry-after'], undefined)
   }
