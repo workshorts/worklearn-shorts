@@ -207,7 +207,7 @@ test('registered DELETE looks up credentials after validation and quota without 
     })
     try {
       const response = await remove('000' + fixture.commentId, { password: '1234', password_hash: 'forged-body-hash', id: 999 })
-      // Password verification and the actual deletion success handler are later plan items.
+      // Successful password verification reaches the later deletion success handler.
       assert.equal(response.status, 404)
       assert.equal(response.text.includes(storedHash), false)
       assert.doesNotMatch(response.text, /password_hash|commentDeleteTarget|scrypt\$/)
