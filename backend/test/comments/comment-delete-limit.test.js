@@ -58,7 +58,7 @@ test('comment deletion consumes an independent shared IP quota after validation 
     assert.match(response.headers['content-type'], /^application\/json\b/)
   }
   function admitted(response) {
-    // Admitted attempts reach target lookup and verification; deletion follows later.
+    // Admitted attempts either delete the target or receive its credential or existence error.
     assert.ok([204, 403, 404].includes(response.status))
     assert.equal(response.headers['retry-after'], undefined)
   }

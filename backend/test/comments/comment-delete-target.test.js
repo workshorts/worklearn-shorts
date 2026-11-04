@@ -207,8 +207,8 @@ test('registered DELETE looks up credentials after validation and quota without 
     })
     try {
       const response = await remove('000' + fixture.commentId, { password: '1234', password_hash: 'forged-body-hash', id: 999 })
-      // Successful password verification reaches the later deletion success handler.
-      assert.equal(response.status, 404)
+      assert.equal(response.status, 204)
+      assert.equal(response.text, '')
       assert.equal(response.text.includes(storedHash), false)
       assert.doesNotMatch(response.text, /password_hash|commentDeleteTarget|scrypt\$/)
       assert.equal(response.headers['set-cookie'], undefined)
@@ -216,6 +216,9 @@ test('registered DELETE looks up credentials after validation and quota without 
     } finally {
       observed.mock.restore()
     }
-    assert.deepEqual(snapshot(db, databasePath), baseline)
+    const after = snapshot(db, databasePath)
+    assert.deepEqual(after.rows.comments, baseline.rows.comments.filter(row => row.id !== fixture.commentId))
+    for (const table of tables.filter(table => table !== 'comments')) assert.deepEqual(after.rows[table], baseline.rows[table])
+    assert.deepEqual(after.schema, baseline.schema)
   })
 })

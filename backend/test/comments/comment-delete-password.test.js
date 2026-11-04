@@ -53,7 +53,7 @@ test('incorrect exact representations and malformed stored credentials fail clos
   }
 })
 
-test('registered DELETE checks the stored password after validation, quota and lookup without writes or credential leaks', { timeout: 30000 }, async t => {
+test('registered DELETE checks the stored password after validation, quota and lookup without credential leaks', { timeout: 30000 }, async t => {
   const previous = { COMMENT_DELETE_MAX: process.env.COMMENT_DELETE_MAX, COMMENT_DELETE_WINDOW_SECONDS: process.env.COMMENT_DELETE_WINDOW_SECONDS }
   Object.assign(process.env, { COMMENT_DELETE_MAX: '3', COMMENT_DELETE_WINDOW_SECONDS: '2' })
   t.after(() => {
@@ -75,6 +75,21 @@ test('registered DELETE checks the stored password after validation, quota and l
   t.mock.method(Date, 'now', () => now)
   const remove = (value = password, id = fixture.commentId, extra = {}) =>
     request(`/api/comments/${id}`, { method: 'DELETE', body: { password: value, ...extra } })
+  const originalTarget = db.prepare('SELECT * FROM comments WHERE id = ?').get(fixture.commentId)
+  async function deleteAndRestoreFixture() {
+    const before = snapshot()
+    const response = await remove()
+    assert.equal(response.status, 204)
+    assert.equal(response.text, '')
+    const after = snapshot()
+    assert.deepEqual(after.rows.comments, before.rows.comments.filter(row => row.id !== fixture.commentId))
+    for (const table of tables.filter(table => table !== 'comments')) assert.deepEqual(after.rows[table], before.rows[table])
+    assert.deepEqual(after.schema, before.schema)
+    // Restore only this owned fixture so later failure cases still verify the same credentials.
+    db.prepare('INSERT INTO comments (id, video_id, nickname, password_hash, content, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(originalTarget.id, originalTarget.video_id, originalTarget.nickname, originalTarget.password_hash,
+        originalTarget.content, originalTarget.created_at)
+  }
   function rejected(response) {
     assert.equal(response.status, 403)
     assert.deepEqual(response.json, mismatch)
@@ -86,14 +101,11 @@ test('registered DELETE checks the stored password after validation, quota and l
   await t.test('the exact password passes while changed whitespace and Unicode representations return the fixed 403', async subtest => {
     const before = snapshot()
     const log = subtest.mock.method(console, 'error', () => {})
-    // Actual deletion and its 204 response are later plan items, so accepted credentials still fall through.
-    const accepted = await remove()
-    assert.equal(accepted.status, 404)
-    assert.equal(accepted.text.includes(storedHash), false)
     rejected(await remove(password.trim()))
     rejected(await remove(password.normalize('NFC')))
-    assert.equal(log.mock.callCount(), 0)
     assert.deepEqual(snapshot(), before)
+    await deleteAndRestoreFixture()
+    assert.equal(log.mock.callCount(), 0)
   })
 
   await t.test('client-supplied hashes and verification markers cannot approve a wrong password', async () => {
@@ -148,7 +160,7 @@ test('registered DELETE checks the stored password after validation, quota and l
       assert.equal(derived.mock.callCount(), 0)
       assert.equal(compared.mock.callCount(), 0)
       rejected(await remove('wrong-password'))
-      assert.equal((await remove()).status, 404)
+      await deleteAndRestoreFixture()
       assert.equal(derived.mock.callCount(), 2)
       assert.equal(compared.mock.callCount(), 2)
       assert.equal((await remove()).status, 429)
@@ -159,7 +171,9 @@ test('registered DELETE checks the stored password after validation, quota and l
       compared.mock.restore()
       syncBuiltinESMExports()
     }
-    assert.deepEqual(snapshot(), before)
+    const after = snapshot()
+    assert.deepEqual(after.rows, before.rows)
+    assert.deepEqual(after.schema, before.schema)
   })
 
   await t.test('native verification failure fails closed with the same safe 403 and recovers after restoration', async subtest => {
@@ -171,12 +185,13 @@ test('registered DELETE checks the stored password after validation, quota and l
     try {
       rejected(await remove())
       assert.equal(log.mock.callCount(), 0)
+      assert.deepEqual(snapshot(), before)
     } finally {
       fault.mock.restore()
       syncBuiltinESMExports()
     }
-    assert.equal((await remove()).status, 404)
+    await deleteAndRestoreFixture()
     assert.equal(log.mock.callCount(), 0)
-    assert.deepEqual(snapshot(), before)
+    assert.deepEqual(snapshot().rows, before.rows)
   })
 })
