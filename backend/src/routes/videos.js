@@ -1,8 +1,16 @@
 import { Router } from 'express'
 import { getDb } from '../db/client.js'
+import { limitCommentCreateRequest } from '../middleware/commentRequestLimits.js'
+import { hashCommentPassword } from '../middleware/hashCommentPassword.js'
+import { requireCommentVideo } from '../middleware/requireCommentVideo.js'
+import { requireJson } from '../middleware/requireJson.js'
+import { validateCommentCreateRequest } from '../middleware/validateCommentCreateRequest.js'
+import { validateCommentListRequest } from '../middleware/validateCommentListRequest.js'
 import { validateVideoListRequest } from '../middleware/validateVideoListRequest.js'
 import { validateVideoLikeRequest } from '../middleware/validateVideoLikeRequest.js'
 import { validateVideoViewRequest } from '../middleware/validateVideoViewRequest.js'
+import { createComment } from '../services/comment-create.js'
+import { loadCommentList } from '../services/comment-read.js'
 import { loadVideoDetail, loadVideoList } from '../services/video-read.js'
 import { addVideoLike, removeVideoLike } from '../services/video-like.js'
 import { recordVideoView } from '../services/video-view.js'
@@ -10,6 +18,20 @@ import { parseResourceId } from '../utils/resource-id.js'
 import { readOptionalVisitorId } from '../utils/visitor-id.js'
 
 export const videosRouter = Router()
+
+// Send public comments only after the shared read snapshot commits.
+videosRouter.get('/:id/comments', validateCommentListRequest, (req, res) => {
+  const { id, page, limit } = res.locals.commentListRequest
+  const { data, total } = loadCommentList(getDb(), { id, page, limit })
+  res.json({ data, page, limit, total })
+})
+
+// Invalid input consumes no quota; excessive attempts stop before hashing or storage.
+videosRouter.post('/:id/comments', requireJson, validateCommentCreateRequest,
+  limitCommentCreateRequest, requireCommentVideo, hashCommentPassword, (req, res) => {
+    const comment = createComment(getDb(), res.locals.commentCreateRequest)
+    res.status(201).json(comment)
+  })
 
 // Validate before opening the DB; both synchronous services return only after commit.
 videosRouter.route('/:id/like')

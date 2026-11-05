@@ -16,6 +16,8 @@ export const errors = {
   authRequired: () => new ApiError(401, 'AUTH_REQUIRED', '로그인이 필요합니다.'),
   invalidCredentials: () =>
     new ApiError(401, 'INVALID_CREDENTIALS', '아이디 또는 비밀번호가 올바르지 않습니다.'),
+  commentPasswordMismatch: () =>
+    new ApiError(403, 'COMMENT_PASSWORD_MISMATCH', '비밀번호가 일치하지 않습니다.'),
   originForbidden: () => new ApiError(403, 'ORIGIN_FORBIDDEN', '허용되지 않은 요청 출처입니다.'),
   notFound: (message = '요청한 대상을 찾을 수 없습니다.') => new ApiError(404, 'NOT_FOUND', message),
   conflict: (code, message) => new ApiError(409, code, message),

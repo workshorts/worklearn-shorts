@@ -1,8 +1,10 @@
 import { errors } from '../errors.js'
 
-// 요청 헤더의 Content-Type이 JSON이 아니면 415 (본문이 비어 있어도 헤더가 JSON이면 통과)
+// Require the exact JSON media type; body and field validation belong to later handlers.
 export function requireJson(req, res, next) {
-  const type = String(req.headers['content-type'] || '').toLowerCase()
-  if (!type.startsWith('application/json')) return next(errors.unsupportedMediaType())
+  const type = req.headers['content-type']
+  if (typeof type !== 'string' || type.split(';', 1)[0].trim().toLowerCase() !== 'application/json') {
+    return next(errors.unsupportedMediaType())
+  }
   next()
 }
