@@ -8,6 +8,7 @@ import { validateCommentCreateRequest } from '../middleware/validateCommentCreat
 import { validateCommentListRequest } from '../middleware/validateCommentListRequest.js'
 import { validateVideoListRequest } from '../middleware/validateVideoListRequest.js'
 import { validateVideoLikeRequest } from '../middleware/validateVideoLikeRequest.js'
+import { validateVideoQuizRequest } from '../middleware/validateVideoQuizRequest.js'
 import { validateVideoViewRequest } from '../middleware/validateVideoViewRequest.js'
 import { createComment } from '../services/comment-create.js'
 import { loadCommentList } from '../services/comment-read.js'
@@ -18,6 +19,9 @@ import { parseResourceId } from '../utils/resource-id.js'
 import { readOptionalVisitorId } from '../utils/visitor-id.js'
 
 export const videosRouter = Router()
+
+// Validate quiz IDs before any subsequent lookup.
+videosRouter.get('/:id/quiz', validateVideoQuizRequest)
 
 // Send public comments only after the shared read snapshot commits.
 videosRouter.get('/:id/comments', validateCommentListRequest, (req, res) => {
