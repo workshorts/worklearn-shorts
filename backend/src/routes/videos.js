@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { getDb } from '../db/client.js'
 import { limitCommentCreateRequest } from '../middleware/commentRequestLimits.js'
 import { hashCommentPassword } from '../middleware/hashCommentPassword.js'
+import { loadQuizForVideo } from '../middleware/loadQuizForVideo.js'
 import { requireCommentVideo } from '../middleware/requireCommentVideo.js'
 import { requireQuizVideo } from '../middleware/requireQuizVideo.js'
 import { requireJson } from '../middleware/requireJson.js'
@@ -22,7 +23,7 @@ import { readOptionalVisitorId } from '../utils/visitor-id.js'
 export const videosRouter = Router()
 
 // Reject invalid IDs and missing parents before looking up the quiz.
-videosRouter.get('/:id/quiz', validateVideoQuizRequest, requireQuizVideo)
+videosRouter.get('/:id/quiz', validateVideoQuizRequest, requireQuizVideo, loadQuizForVideo)
 
 // Send public comments only after the shared read snapshot commits.
 videosRouter.get('/:id/comments', validateCommentListRequest, (req, res) => {
