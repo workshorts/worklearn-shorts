@@ -10,12 +10,14 @@ import LearnerNavigation from '../../components/learner/LearnerNavigation.jsx'
 export default function FeedScreen({ navigate, search = '' }) {
   const raw = new URLSearchParams(search).get('tagId')
   const tagId = raw && /^[1-9]\d*$/.test(raw) && Number.isSafeInteger(Number(raw)) ? Number(raw) : null
-  return <FilteredFeed key={tagId ?? 'all'} tagId={tagId} navigate={navigate} search={search} />
+  const shared = new URLSearchParams(search).get('video')
+  const videoId = shared && /^[1-9]\d*$/.test(shared) && Number.isSafeInteger(Number(shared)) ? Number(shared) : null
+  return <FilteredFeed key={`${tagId ?? 'all'}-${videoId ?? ''}`} tagId={tagId} videoId={videoId} navigate={navigate} search={search} />
 }
 
 // 실제 데이터 로딩과 화면 구성을 분리한다.
-function FilteredFeed({ tagId, navigate, search }) {
-  const { videos, loading, error, loadingMore, moreError, loadMore, reload } = useVideoFeed(tagId)
+function FilteredFeed({ tagId, videoId, navigate, search }) {
+  const { videos, loading, error, loadingMore, moreError, loadMore, reload } = useVideoFeed(tagId, videoId)
   const [commentVideo, setCommentVideo] = useState(null)
   const [quizVideo, setQuizVideo] = useState(null)
   const { renderActions, handleWatched, updateCommentCount } = useVideoReactions({ onOpenComments: setCommentVideo, onOpenQuiz: setQuizVideo })
@@ -27,6 +29,7 @@ function FilteredFeed({ tagId, navigate, search }) {
     : tagId !== null ? <div className="feed-state"><p>이 태그에 등록된 영상이 없습니다.</p><button type="button" onClick={() => selectTag(null)}>전체 영상 보기</button></div> : undefined
   function selectTag(id) {
     const query = new URLSearchParams(search)
+    query.delete('video')
     if (id === null) query.delete('tagId')
     else query.set('tagId', String(id))
     navigate(query.size ? `/?${query}` : '/')
