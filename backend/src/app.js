@@ -5,6 +5,9 @@ import { errorHandler } from './middleware/errorHandler.js'
 import { parseJson } from './middleware/parseJson.js'
 import { requireAllowedOrigin } from './middleware/requireAllowedOrigin.js'
 import { adminAuthRouter } from './routes/adminAuth.js'
+import { adminCommentsRouter } from './routes/adminComments.js'
+import { adminCoursesRouter } from './routes/adminCourses.js'
+import { adminTagsRouter } from './routes/adminTags.js'
 import { adminUploadsRouter } from './routes/adminUploads.js'
 import { adminVideosRouter } from './routes/adminVideos.js'
 import { commentsRouter } from './routes/comments.js'
@@ -26,6 +29,9 @@ app.use('/uploads', express.static(config.uploadDir, { index: false }))
 app.use('/api/admin', adminAuthRouter)
 app.use('/api/admin/uploads', adminUploadsRouter)
 app.use('/api/admin/videos', adminVideosRouter)
+app.use('/api/admin/courses', adminCoursesRouter)
+app.use('/api/admin/tags', adminTagsRouter)
+app.use('/api/admin/comments', adminCommentsRouter)
 
 // 사용자 API
 app.use('/api/comments', commentsRouter)

@@ -34,6 +34,18 @@ npm run db:seed
 npm run db:seed:courses
 ```
 
+#### 미등록 업로드 파일 정리 (운영 점검)
+
+영상 업로드 화면에서 파일만 올리고 영상을 등록하지 않으면 그 파일이 `backend/uploads`에 계속 남는다. 가끔 아래 명령으로 정리한다.
+
+```sh
+npm run uploads:cleanup                         # 미리보기: 아무것도 지우지 않고 지울 파일만 보여 준다
+npm run uploads:cleanup -- --apply              # 실제로 지운다
+npm run uploads:cleanup -- --min-age-hours=48   # 마지막 수정이 48시간 넘은 파일만 대상으로 한다 (기본 24, 최소 1)
+```
+
+영상이 쓰는 파일, 최근에 올린 파일, 업로드 API가 만든 이름이 아닌 파일은 지우지 않는다. 서버가 켜져 있어도 실행할 수 있다.
+
 ### 2. 프론트엔드
 
 ```sh
