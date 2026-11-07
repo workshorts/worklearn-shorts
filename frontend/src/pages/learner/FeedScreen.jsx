@@ -1,4 +1,5 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
+import CommentSheet from '../../components/feed/CommentSheet.jsx'
 import useVideoFeed from '../../components/feed/useVideoFeed.js'
 import useVideoReactions from '../../components/feed/useVideoReactions.jsx'
 import FeedPage from './FeedPage.jsx'
@@ -14,7 +15,8 @@ export default function FeedScreen({ navigate, search = '' }) {
 // 실제 데이터 로딩과 화면 구성을 분리한다.
 function FilteredFeed({ tagId, navigate, search }) {
   const { videos, loading, error, loadingMore, moreError, loadMore, reload } = useVideoFeed(tagId)
-  const { renderActions, handleWatched } = useVideoReactions()
+  const [commentVideo, setCommentVideo] = useState(null)
+  const { renderActions, handleWatched, updateCommentCount } = useVideoReactions({ onOpenComments: setCommentVideo })
   const handleActiveVideo = useCallback((index) => {
     if (index >= Math.max(0, videos.length - 3) && !moreError) loadMore()
   }, [videos.length, moreError, loadMore])
@@ -29,7 +31,8 @@ function FilteredFeed({ tagId, navigate, search }) {
   }
   const notice = moreError ? <div className="feed-load-notice" role="alert"><span>다음 영상을 불러오지 못했습니다.</span><button type="button" onClick={loadMore}>다시 시도</button></div>
     : loadingMore ? <div className="feed-load-notice" role="status">다음 영상을 불러오는 중…</div> : null
-  return <FeedPage videos={videos} emptyContent={emptyContent} notice={notice} onActiveVideoChange={handleActiveVideo}
+  return <><FeedPage videos={videos} emptyContent={emptyContent} notice={notice} onActiveVideoChange={handleActiveVideo}
     header={<LearnerNavigation navigate={navigate} />} filters={<FeedTagFilter selectedId={tagId} onSelect={selectTag} />}
     renderActions={renderActions} onVideoWatched={handleWatched} />
+    {commentVideo && <CommentSheet key={commentVideo.id} video={commentVideo} onClose={() => setCommentVideo(null)} onCountChange={updateCommentCount} />}</>
 }
