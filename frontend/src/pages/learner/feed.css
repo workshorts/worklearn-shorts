@@ -13,6 +13,14 @@
   font-synthesis: none;
 }
 .learner-feed-page.has-header { --feed-header-height: 72px; }
+.learner-feed-page:has(.learner-header) { --feed-bottom-height: 0px; }
+.learner-feed-page:has(.learner-header) .feed-content { margin-bottom: var(--feed-bottom-height); }
+.feed-tag-options { display: flex; flex-wrap: wrap; gap: 9px; }
+.feed-tag-options button { border: 1px solid transparent; padding: 9px 15px; border-radius: 30px; background: #e1e5ec; color: #626d80; font: 500 13px 'Malgun Gothic', Arial, sans-serif; cursor: pointer; white-space: nowrap; }
+.feed-tag-options button[aria-pressed=true] { background: #5361ff; color: white; }
+.feed-tag-options button:hover { border-color: #8791f0; }
+.feed-tag-message { margin: 8px 0; color: #687890; font-size: 12px; line-height: 1.7; }
+.feed-tag-message button { background: none; color: inherit; border: 0; text-decoration: underline; cursor: pointer; font: inherit; }
 .learner-feed-page, .learner-feed-page * { box-sizing: border-box; }
 .feed-structure-header { display: flex; align-items: center; height: 72px; flex-shrink: 0; padding: 0 28px; background: #fff; color: #172337; }
 .feed-structure-header h1 { margin: 0; font-size: 26px; letter-spacing: -1px; }
@@ -74,6 +82,11 @@
   .feed-filters { left: 20px; max-width: 150px; }
 }
 @media (max-width: 767px) {
+  .learner-feed-page:has(.learner-header) { --feed-header-height: 64px; --feed-bottom-height: calc(64px + env(safe-area-inset-bottom, 0px)); --feed-video-height: calc(100dvh - var(--feed-header-height) - var(--feed-bottom-height)); }
+  .feed-tag-options { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+  .feed-tag-options button { flex-shrink: 0; padding: 9px 17px; font-size: 14px; background: #262b31b0; color: #fff; border-color: #ffffff26; backdrop-filter: blur(8px); }
+  .feed-tag-message { color: #dde3f1; }
+  .feed-video-card:has(.feed-sound-button) .feed-sound-button { top: 80px; }
   .learner-feed-page { --feed-video-height: calc(100dvh - var(--feed-header-height)); --feed-video-width: 100%; background: #0a0d13; }
   .feed-content { padding: 0; }
   .feed-video-slide { padding: 0; }

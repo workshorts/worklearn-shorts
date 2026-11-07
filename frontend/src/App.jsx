@@ -6,19 +6,22 @@ import AdminVideos from './pages/admin/AdminVideos.jsx'
 import AdminVideoForm from './pages/admin/AdminVideoForm.jsx'
 import AdminCourses from './pages/admin/AdminCourses.jsx'
 import FeedScreen from './pages/learner/FeedScreen.jsx'
+import LearnerNavigation from './components/learner/LearnerNavigation.jsx'
 
 export default function App() {
   const [pathname, setPathname] = useState(window.location.pathname)
+  const [search, setSearch] = useState(window.location.search)
 
   useEffect(() => {
-    const updatePath = () => setPathname(window.location.pathname)
+    const updatePath = () => { setPathname(window.location.pathname); setSearch(window.location.search) }
     window.addEventListener('popstate', updatePath)
     return () => window.removeEventListener('popstate', updatePath)
   }, [])
 
   const navigate = useCallback((path, { replace = false } = {}) => {
     window.history[replace ? 'replaceState' : 'pushState'](null, '', path)
-    setPathname(path)
+    setPathname(window.location.pathname)
+    setSearch(window.location.search)
   }, [])
 
   useEffect(() => {
@@ -49,7 +52,8 @@ export default function App() {
     )
   }
 
-  if (pathname === '/') return <FeedScreen />
+  if (pathname === '/') return <FeedScreen navigate={navigate} search={search} />
+  if (pathname === '/paths') return <div className="learning-placeholder"><LearnerNavigation navigate={navigate} active="learning" /><main><h1>학습하기</h1><p>학습과정 목록 화면을 준비하고 있습니다.</p></main></div>
 
   return (
     <main style={{ padding: 32 }}>
