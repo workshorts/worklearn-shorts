@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import CommentSheet from '../../components/feed/CommentSheet.jsx'
+import QuizSheet from '../../components/feed/QuizSheet.jsx'
 import useVideoFeed from '../../components/feed/useVideoFeed.js'
 import useVideoReactions from '../../components/feed/useVideoReactions.jsx'
 import FeedPage from './FeedPage.jsx'
@@ -16,7 +17,8 @@ export default function FeedScreen({ navigate, search = '' }) {
 function FilteredFeed({ tagId, navigate, search }) {
   const { videos, loading, error, loadingMore, moreError, loadMore, reload } = useVideoFeed(tagId)
   const [commentVideo, setCommentVideo] = useState(null)
-  const { renderActions, handleWatched, updateCommentCount } = useVideoReactions({ onOpenComments: setCommentVideo })
+  const [quizVideo, setQuizVideo] = useState(null)
+  const { renderActions, handleWatched, updateCommentCount } = useVideoReactions({ onOpenComments: setCommentVideo, onOpenQuiz: setQuizVideo })
   const handleActiveVideo = useCallback((index) => {
     if (index >= Math.max(0, videos.length - 3) && !moreError) loadMore()
   }, [videos.length, moreError, loadMore])
@@ -34,5 +36,6 @@ function FilteredFeed({ tagId, navigate, search }) {
   return <><FeedPage videos={videos} emptyContent={emptyContent} notice={notice} onActiveVideoChange={handleActiveVideo}
     header={<LearnerNavigation navigate={navigate} />} filters={<FeedTagFilter selectedId={tagId} onSelect={selectTag} />}
     renderActions={renderActions} onVideoWatched={handleWatched} />
-    {commentVideo && <CommentSheet key={commentVideo.id} video={commentVideo} onClose={() => setCommentVideo(null)} onCountChange={updateCommentCount} />}</>
+    {commentVideo && <CommentSheet key={commentVideo.id} video={commentVideo} onClose={() => setCommentVideo(null)} onCountChange={updateCommentCount} />}
+    {quizVideo && <QuizSheet key={quizVideo.id} video={quizVideo} onClose={() => setQuizVideo(null)} />}</>
 }
