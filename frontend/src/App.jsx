@@ -6,7 +6,7 @@ import AdminVideos from './pages/admin/AdminVideos.jsx'
 import AdminVideoForm from './pages/admin/AdminVideoForm.jsx'
 import AdminCourses from './pages/admin/AdminCourses.jsx'
 import FeedScreen from './pages/learner/FeedScreen.jsx'
-import LearnerNavigation from './components/learner/LearnerNavigation.jsx'
+import { CourseList, CourseScreen } from './pages/learner/CourseScreen.jsx'
 
 export default function App() {
   const [pathname, setPathname] = useState(window.location.pathname)
@@ -53,7 +53,9 @@ export default function App() {
   }
 
   if (pathname === '/') return <FeedScreen navigate={navigate} search={search} />
-  if (pathname === '/paths') return <div className="learning-placeholder"><LearnerNavigation navigate={navigate} active="learning" /><main><h1>학습하기</h1><p>학습과정 목록 화면을 준비하고 있습니다.</p></main></div>
+  if (pathname === '/paths') return <CourseList navigate={navigate} />
+  const courseRoute = pathname.match(/^\/paths\/([1-9]\d*)(?:\/play\/([1-9]\d*))?$/)
+  if (courseRoute) return <CourseScreen key={courseRoute[1]} id={Number(courseRoute[1])} lesson={courseRoute[2] ? Number(courseRoute[2]) : undefined} navigate={navigate} />
 
   return (
     <main style={{ padding: 32 }}>
