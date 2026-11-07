@@ -24,6 +24,8 @@ export default function FeedVideoPlayer({ src, poster, title, isActive = false, 
   const [error, setError] = useState('')
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [speed, setSpeed] = useState(1)
 
   // play()는 브라우저 정책이나 pause()와의 경합으로 거절될 수 있음
   const play = useCallback(() => {
@@ -112,6 +114,8 @@ export default function FeedVideoPlayer({ src, poster, title, isActive = false, 
         onMutedChange?.(!muted)
       }}><PlayerIcon name={muted ? 'muted' : 'volume'} /></button>
       <div className="feed-video-controls">
+        <button type="button" className="feed-settings-button" aria-label="재생 설정" aria-expanded={settingsOpen} onClick={() => setSettingsOpen(!settingsOpen)}>•••</button>
+        {settingsOpen && <label className="feed-speed-setting">재생 속도<select aria-label="재생 속도" value={speed} onChange={(event) => { const rate = Number(event.target.value); videoRef.current.playbackRate = rate; setSpeed(rate) }}>{[0.75, 1, 1.25, 1.5, 2].map((rate) => <option value={rate} key={rate}>{rate}배</option>)}</select></label>}
         <span className="feed-time-label" aria-hidden="true">{timeLabel(currentTime)} / {timeLabel(duration)}</span>
         <input type="range" className="feed-seek" aria-label="영상 재생 위치" aria-valuetext={`${timeLabel(currentTime)} / ${timeLabel(duration)}`}
           min="0" max={duration || 1} step="0.1" value={Math.min(currentTime, duration || 1)} disabled={!duration} onChange={seek} />
