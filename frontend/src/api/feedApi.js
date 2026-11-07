@@ -24,6 +24,15 @@ export async function getFeedTags({ signal } = {}) {
 }
 
 const feedPreview = () => import.meta.env?.DEV === true && import.meta.env?.VITE_FEED_PREVIEW === 'true'
+export async function getFeedVideo(id, signal) {
+  if (feedPreview()) {
+    const { feedPreviewVideos } = await import('../pages/learner/feedPreviewData.js')
+    const video = feedPreviewVideos.find((video) => video.id === id)
+    if (!video) throw new ApiError('영상을 찾을 수 없습니다.', 404)
+    return video
+  }
+  return learnerRequest(`/api/videos/${id}`, { signal, visitor: true })
+}
 
 // 영상 번호가 이상하면 요청 전에 막는다.
 function videoIdOf(id) {
