@@ -12,8 +12,13 @@ export default function Modal({ title, children, onClose, busy = false, classNam
     dialog.focus()
     return () => { document.body.style.overflow = oldOverflow; previous?.focus() }
   }, [])
+  useEffect(() => {
+    // 삭제 등으로 포커스된 요소가 사라져도 Escape로 닫을 수 있게 함
+    const escape = (event) => { if (event.key === 'Escape' && !busy) onClose() }
+    document.addEventListener('keydown', escape)
+    return () => document.removeEventListener('keydown', escape)
+  }, [busy, onClose])
   function keyDown(event) {
-    if (event.key === 'Escape' && !busy) { event.stopPropagation(); onClose() }
     if (event.key !== 'Tab') return
     const controls = [...ref.current.querySelectorAll('button:not(:disabled), input:not(:disabled), a[href], textarea:not(:disabled), select:not(:disabled), [tabindex="0"]')].filter((el) => el.getClientRects().length)
     const first = controls[0], last = controls.at(-1)
