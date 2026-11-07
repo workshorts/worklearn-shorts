@@ -22,8 +22,10 @@ import { readOptionalVisitorId } from '../utils/visitor-id.js'
 
 export const videosRouter = Router()
 
-// Reject invalid IDs and missing parents before looking up the quiz.
-videosRouter.get('/:id/quiz', validateVideoQuizRequest, requireQuizVideo, loadQuizForVideo)
+// Send the public quiz only after its complete read snapshot commits.
+videosRouter.get('/:id/quiz', validateVideoQuizRequest, requireQuizVideo, loadQuizForVideo, (req, res) => {
+  res.json(res.locals.videoQuiz)
+})
 
 // Send public comments only after the shared read snapshot commits.
 videosRouter.get('/:id/comments', validateCommentListRequest, (req, res) => {
