@@ -13,7 +13,7 @@ function PlayerIcon({ name }) {
 }
 
 // onWatched(seconds): 재생 중 실제로 본 시간을 조금씩 알려준다(조회수 집계용).
-export default function FeedVideoPlayer({ src, poster, title, isActive = false, muted = true, onRequestPlay, onMutedChange, onWatched }) {
+export default function FeedVideoPlayer({ src, poster, title, isActive = false, muted = true, onRequestPlay, onMutedChange, onWatched, loop = true, onStarted, onEnded }) {
   const videoRef = useRef(null)
   const lastTime = useRef(null)
   const wantsPlay = useRef(false)
@@ -80,10 +80,10 @@ export default function FeedVideoPlayer({ src, poster, title, isActive = false, 
 
   return <div className="feed-player-shell">
     <video ref={videoRef} className="feed-video-player" src={src || undefined} poster={poster || undefined}
-      aria-label={title} muted={muted} playsInline loop preload={isActive ? 'auto' : 'metadata'}
+      aria-label={title} muted={muted} playsInline loop={loop} preload={isActive ? 'auto' : 'metadata'}
       onPlay={() => {
         if (!wantsPlay.current || document.hidden) { videoRef.current.pause(); return }
-        setPlaying(true); setNeedsTap(false)
+        setPlaying(true); setNeedsTap(false); onStarted?.()
       }}
       onPlaying={() => setBuffering(false)} onWaiting={() => setBuffering(true)}
       onPause={() => { setPlaying(false); setBuffering(false) }}
@@ -98,6 +98,7 @@ export default function FeedVideoPlayer({ src, poster, title, isActive = false, 
         lastTime.current = time
       }}
       onSeeked={() => setBuffering(false)}
+      onEnded={() => { wantsPlay.current = false; setPlaying(false); onEnded?.() }}
       onError={() => { setError('영상을 불러오지 못했어요.'); setBuffering(false) }}
     />
     {!error && <>
