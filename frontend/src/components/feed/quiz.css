@@ -1,0 +1,26 @@
+.av-modal.quiz-sheet { max-width: 560px; background: #181e29; color: #f4f6fa; padding: 30px; }
+.quiz-sheet .av-modal-close { color: #c0c7d7; }
+.quiz-introduction { font-size: 14px; color: #b5bfd1; margin: 8px 0; }
+.quiz-video-title { font-size: 12px; color: #939eb3; margin: 0 0 26px; }
+.quiz-question { display: flex; align-items: start; gap: 12px; margin: 0 0 22px; font-size: 20px; line-height: 1.7; overflow-wrap: anywhere; }
+.quiz-question > span { color: #8b80ff; font-size: 27px; line-height: 1.3; }
+.quiz-answer-list { display: grid; gap: 10px; }
+.quiz-answer { display: flex; align-items: center; gap: 12px; padding: 16px; width: 100%; text-align: left; background: #ffffff03; color: #edf1fa; border: 1px solid #8792aa65; border-radius: 12px; font: inherit; font-size: 16px; cursor: pointer; line-height: 1.6; }
+.quiz-answer > span:nth-child(2) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.quiz-answer small { color: #939eb3; }
+.quiz-answer-circle { display: grid; place-items: center; flex-shrink: 0; width: 26px; height: 26px; border: 2px solid #939eb3; border-radius: 50%; }
+.quiz-answer.is-correct { color: #80e7ca; border-color: #45d2b2; background: #2bc89c12; }
+.quiz-answer.is-wrong { color: #ffb0bc; border-color: #ed7b91; background: #ed7b9110; }
+.quiz-answer[aria-checked=true] .quiz-answer-circle { border-color: currentColor; }
+.quiz-feedback { margin-top: 22px; min-height: 28px; color: #b5bfd1; font-size: 14px; line-height: 1.7; font-weight: 600; }
+.quiz-feedback.correct { color: #80e7ca; }
+.quiz-feedback.wrong { color: #ffb0bc; }
+.quiz-reselect-hint { margin: 20px 0 0; font-size: 12px; text-align: center; color: #939eb3; }
+.quiz-state { padding: 28px 0; color: #b5bfd1; font-size: 14px; line-height: 1.8; text-align: center; }
+.feed-quiz-button { color: #827aff !important; }
+@media(max-width:767px) {
+  .av-modal-backdrop:has(.quiz-sheet) { padding: 0; align-items: end; }
+  .av-modal.quiz-sheet { max-width: 100%; max-height: 90dvh; border-radius: 22px 22px 0 0; padding: 28px 20px calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .quiz-question { font-size: 19px; }
+  .quiz-answer { padding: 14px; }
+}

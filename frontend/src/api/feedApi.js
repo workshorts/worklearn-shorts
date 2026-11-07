@@ -2,17 +2,37 @@ import { ApiError } from './adminApi.js'
 import { learnerRequest } from './learnerApi.js'
 
 // 개발용 미리보기를 끄면 같은 화면에서 실제 사용자 영상 API를 호출
-export async function getFeedVideos({ page = 1, limit = 20, signal } = {}) {
+export async function getFeedVideos({ page = 1, limit = 20, tagId = null, signal } = {}) {
   if (import.meta.env.DEV && import.meta.env.VITE_FEED_PREVIEW === 'true') {
     const { feedPreviewVideos } = await import('../pages/learner/feedPreviewData.js')
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
-    return { data: feedPreviewVideos.slice((page - 1) * limit, page * limit), page, limit, total: feedPreviewVideos.length }
+    const videos = tagId === null ? feedPreviewVideos : feedPreviewVideos.filter((video) => video.tags.some((tag) => tag.id === tagId))
+    return { data: videos.slice((page - 1) * limit, page * limit), page, limit, total: videos.length }
   }
   const query = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (tagId !== null) query.set('tagId', String(tagId))
   return learnerRequest(`/api/videos?${query}`, { signal, visitor: true })
 }
 
+export async function getFeedTags({ signal } = {}) {
+  if (feedPreview()) {
+    const { feedPreviewVideos } = await import('../pages/learner/feedPreviewData.js')
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
+    return { data: [...new Map(feedPreviewVideos.flatMap((video) => video.tags).map((tag) => [tag.id, tag])).values()].sort((a, b) => a.name.localeCompare(b.name, 'ko')) }
+  }
+  return learnerRequest('/api/tags', { signal })
+}
+
 const feedPreview = () => import.meta.env?.DEV === true && import.meta.env?.VITE_FEED_PREVIEW === 'true'
+export async function getFeedVideo(id, signal) {
+  if (feedPreview()) {
+    const { feedPreviewVideos } = await import('../pages/learner/feedPreviewData.js')
+    const video = feedPreviewVideos.find((video) => video.id === id)
+    if (!video) throw new ApiError('영상을 찾을 수 없습니다.', 404)
+    return video
+  }
+  return learnerRequest(`/api/videos/${id}`, { signal, visitor: true })
+}
 
 // 영상 번호가 이상하면 요청 전에 막는다.
 function videoIdOf(id) {

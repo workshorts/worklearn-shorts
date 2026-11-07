@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { recordVideoView, setVideoLike } from '../../api/feedApi.js'
 import { addWatchTime } from '../../lib/watchTime.js'
 import FeedVideoActions from './FeedVideoActions.jsx'
@@ -6,13 +6,18 @@ import FeedVideoActions from './FeedVideoActions.jsx'
 // 좋아요·조회수 상태를 영상 ID별로 관리한다.
 // - 좋아요: 누르는 즉시 화면에 반영하고, 서버 응답 값으로 맞춘다. 실패하면 되돌린다.
 // - 조회수: 영상별 누적 재생 10초가 되면 한 번 기록한다. 서버도 방문자당 한 번만 센다.
-export default function useVideoReactions() {
+export default function useVideoReactions({ onOpenComments, onOpenQuiz } = {}) {
   const [changes, setChanges] = useState({})   // id → { likeCount, likedByMe, viewCount }
   const [pending, setPending] = useState({})   // id → true (좋아요 요청 중)
   const [errors, setErrors] = useState({})     // id → 오류 문구
   const watched = useRef(new Map())            // id → 누적 재생 초
   const recorded = useRef(new Set())           // 조회 기록을 보냈거나 보내는 중인 영상
   const errorTimers = useRef(new Map())
+  const likeRequests = useRef(new Set())
+  useEffect(() => {
+    const timers = errorTimers.current
+    return () => { timers.forEach(clearTimeout); timers.clear() }
+  }, [])
 
   const patch = useCallback((id, values) => setChanges((old) => ({ ...old, [id]: { ...old[id], ...values } })), [])
   const showError = useCallback((id, message) => {
@@ -37,7 +42,8 @@ export default function useVideoReactions() {
   }, [patch])
 
   const toggleLike = useCallback(async (video) => {
-    if (pending[video.id]) return
+    if (likeRequests.current.has(video.id)) return
+    likeRequests.current.add(video.id)
     const liked = !video.likedByMe
     const before = { likeCount: video.likeCount, likedByMe: video.likedByMe }
     setPending((old) => ({ ...old, [video.id]: true }))
@@ -49,12 +55,14 @@ export default function useVideoReactions() {
       patch(video.id, before)
       showError(video.id, error.message || '좋아요를 반영하지 못했습니다.')
     } finally {
+      likeRequests.current.delete(video.id)
       setPending((old) => { const next = { ...old }; delete next[video.id]; return next })
     }
-  }, [pending, patch, showError])
+  }, [patch, showError])
 
   const renderActions = useCallback((video) => <FeedVideoActions video={{ ...video, ...changes[video.id] }}
-    pending={!!pending[video.id]} error={errors[video.id]} onToggleLike={toggleLike} />, [changes, pending, errors, toggleLike])
+    pending={!!pending[video.id]} error={errors[video.id]} onToggleLike={toggleLike} onOpenComments={onOpenComments} onOpenQuiz={onOpenQuiz} />, [changes, pending, errors, toggleLike, onOpenComments, onOpenQuiz])
+  const updateCommentCount = useCallback((id, commentCount) => patch(id, { commentCount }), [patch])
 
-  return { renderActions, handleWatched }
+  return { renderActions, handleWatched, updateCommentCount }
 }

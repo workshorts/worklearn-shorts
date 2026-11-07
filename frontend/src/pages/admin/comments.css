@@ -1,0 +1,18 @@
+.am-layout { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.am-videos, .am-comments { min-width: 0; padding: 22px; background: white; border: 1px solid #dde4ee; border-radius: 8px; }
+.am-layout h2 { margin: 0 0 18px; font-size: 18px; overflow-wrap: anywhere; }
+.am-videos ul, .am-comment-list { list-style: none; margin: 0; padding: 0; }
+.am-videos li + li { margin-top: 6px; }
+.am-videos li button { width: 100%; padding: 12px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #263449; text-align: left; font: inherit; line-height: 1.6; overflow-wrap: anywhere; cursor: pointer; }
+.am-videos li button:hover { background: #f0f4fa; }
+.am-videos li button.selected { border-color: #c6d0ff; background: #eef1ff; color: #3958eb; font-weight: 600; }
+.am-videos button:focus-visible { outline: 2px solid #667deb; outline-offset: 2px; }
+.am-section-heading { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+.am-section-heading h2 { margin-bottom: 0; }
+.am-comment-list li { padding: 20px 0; border-top: 1px solid #e8edf4; }
+.am-comment-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; overflow-wrap: anywhere; }
+.am-comment-meta time { font-size: 12px; color: #748198; }
+.am-comment-content { line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.am-delete-content { max-height: 220px; overflow-y: auto; padding: 14px; border-radius: 6px; background: #f0f3f8; }
+.am-placeholder { align-self: stretch; display: grid; place-items: center; min-height: 220px; }
+@media (max-width: 900px) { .am-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; } .am-videos, .am-comments { padding: 18px; } .am-videos ul { max-height: 240px; overflow-y: auto; } }

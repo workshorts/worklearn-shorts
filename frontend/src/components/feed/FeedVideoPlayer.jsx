@@ -13,7 +13,7 @@ function PlayerIcon({ name }) {
 }
 
 // onWatched(seconds): 재생 중 실제로 본 시간을 조금씩 알려준다(조회수 집계용).
-export default function FeedVideoPlayer({ src, poster, title, isActive = false, muted = true, onRequestPlay, onMutedChange, onWatched }) {
+export default function FeedVideoPlayer({ src, poster, title, isActive = false, muted = true, onRequestPlay, onMutedChange, onWatched, loop = true, onStarted, onEnded }) {
   const videoRef = useRef(null)
   const lastTime = useRef(null)
   const wantsPlay = useRef(false)
@@ -24,6 +24,8 @@ export default function FeedVideoPlayer({ src, poster, title, isActive = false, 
   const [error, setError] = useState('')
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [speed, setSpeed] = useState(1)
 
   // play()는 브라우저 정책이나 pause()와의 경합으로 거절될 수 있음
   const play = useCallback(() => {
@@ -80,10 +82,10 @@ export default function FeedVideoPlayer({ src, poster, title, isActive = false, 
 
   return <div className="feed-player-shell">
     <video ref={videoRef} className="feed-video-player" src={src || undefined} poster={poster || undefined}
-      aria-label={title} muted={muted} playsInline loop preload={isActive ? 'auto' : 'metadata'}
+      aria-label={title} muted={muted} playsInline loop={loop} preload={isActive ? 'auto' : 'metadata'}
       onPlay={() => {
         if (!wantsPlay.current || document.hidden) { videoRef.current.pause(); return }
-        setPlaying(true); setNeedsTap(false)
+        setPlaying(true); setNeedsTap(false); onStarted?.()
       }}
       onPlaying={() => setBuffering(false)} onWaiting={() => setBuffering(true)}
       onPause={() => { setPlaying(false); setBuffering(false) }}
@@ -98,6 +100,7 @@ export default function FeedVideoPlayer({ src, poster, title, isActive = false, 
         lastTime.current = time
       }}
       onSeeked={() => setBuffering(false)}
+      onEnded={() => { wantsPlay.current = false; setPlaying(false); onEnded?.() }}
       onError={() => { setError('영상을 불러오지 못했어요.'); setBuffering(false) }}
     />
     {!error && <>
@@ -111,6 +114,8 @@ export default function FeedVideoPlayer({ src, poster, title, isActive = false, 
         onMutedChange?.(!muted)
       }}><PlayerIcon name={muted ? 'muted' : 'volume'} /></button>
       <div className="feed-video-controls">
+        <button type="button" className="feed-settings-button" aria-label="재생 설정" aria-expanded={settingsOpen} onClick={() => setSettingsOpen(!settingsOpen)}>•••</button>
+        {settingsOpen && <label className="feed-speed-setting">재생 속도<select aria-label="재생 속도" value={speed} onChange={(event) => { const rate = Number(event.target.value); videoRef.current.playbackRate = rate; setSpeed(rate) }}>{[0.75, 1, 1.25, 1.5, 2].map((rate) => <option value={rate} key={rate}>{rate}배</option>)}</select></label>}
         <span className="feed-time-label" aria-hidden="true">{timeLabel(currentTime)} / {timeLabel(duration)}</span>
         <input type="range" className="feed-seek" aria-label="영상 재생 위치" aria-valuetext={`${timeLabel(currentTime)} / ${timeLabel(duration)}`}
           min="0" max={duration || 1} step="0.1" value={Math.min(currentTime, duration || 1)} disabled={!duration} onChange={seek} />

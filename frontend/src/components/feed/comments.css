@@ -1,0 +1,32 @@
+.av-modal.comment-sheet { max-width: 540px; background: #181e29; color: #f4f6fa; padding: 28px; }
+.comment-sheet .av-modal-close { color: #c0c7d7; }
+.comment-video-title { font-size: 12px; color: #939eb3; margin: 0 0 20px; }
+.comment-list { max-height: 42dvh; overflow-y: auto; overscroll-behavior: contain; font-size: 13px; }
+.comment-item { padding: 18px 0; border-bottom: 1px solid #ffffff15; }
+.comment-item header { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.comment-item strong { font-size: 14px; }
+.comment-item time { font-size: 11px; color: #939eb3; }
+.comment-item header button { margin-left: auto; }
+.comment-item > p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; margin: 12px 0 0; }
+.comment-sheet button { font: inherit; cursor: pointer; }
+.comment-item button, .comment-more, .comment-delete-actions button { padding: 6px 10px; background: #ffffff0a; border: 1px solid #ffffff20; border-radius: 6px; color: #c6cfe2; }
+.comment-more { display: block; margin: 18px auto; }
+.comment-compose { border-top: 1px solid #ffffff15; padding-top: 18px; margin-top: 18px; }
+.comment-identity { display: grid; grid-template-columns: 1fr 1.5fr; gap: 10px; }
+.comment-sheet .comment-compose input, .comment-sheet .comment-delete-form input, .comment-compose textarea { width: 100%; background: #10151e; color: #f4f6fa; border: 1px solid #ffffff20; border-radius: 8px; padding: 12px; font: inherit; font-size: 13px; box-sizing: border-box; }
+.comment-compose textarea { margin-top: 10px; resize: vertical; min-height: 90px; line-height: 1.7; }
+.comment-compose textarea:focus { outline: 2px solid #8791ff; }
+.comment-compose footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; color: #939eb3; font-size: 12px; }
+.comment-compose footer button { color: white; background: #6359f5; padding: 9px 16px; border: 0; border-radius: 7px; }
+.comment-delete-form { background: #ffffff05; border-radius: 8px; padding: 12px; margin-top: 14px; }
+.comment-delete-form label { display: block; margin-bottom: 8px; font-size: 12px; }
+.comment-delete-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.comment-error { color: #ffadba; font-size: 12px; line-height: 1.7; }
+.comment-success { color: #7ee4c5; font-size: 12px; }
+.comment-empty { text-align: center; color: #939eb3; padding: 28px 0; }
+@media(max-width:767px) {
+  .av-modal-backdrop:has(.comment-sheet) { padding: 0; align-items: end; }
+  .av-modal.comment-sheet { max-width: 100%; max-height: 90dvh; border-radius: 22px 22px 0 0; padding: 26px 20px calc(20px + env(safe-area-inset-bottom, 0px)); }
+  .comment-list { max-height: 36dvh; }
+  .comment-sheet .comment-compose input, .comment-sheet .comment-delete-form input, .comment-compose textarea { font-size: 16px; }
+}
