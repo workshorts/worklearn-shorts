@@ -54,6 +54,12 @@
 .feed-time-label { font-size: 11px; line-height: 1.6; color: #e3e6ef; font-variant-numeric: tabular-nums; }
 .feed-seek { display: block; width: 100%; height: 22px; margin: 0; accent-color: #8288ff; cursor: pointer; }
 .feed-seek:disabled { opacity: .4; cursor: default; }
+.feed-settings-button { position: absolute; right: 0; top: -12px; padding: 6px 10px; background: #161e2bbd; border: 1px solid #ffffff30; border-radius: 6px; }
+.feed-speed-setting { position: absolute; right: 0; bottom: 55px; display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid #ffffff30; border-radius: 8px; background: #182333f5; font-size: 13px; }
+.feed-speed-setting select { padding: 7px; background: #252f42; color: white; border: 1px solid #8994ac; border-radius: 5px; font: inherit; }
+.feed-time-label { padding-right: 55px; }
+.share-sheet > p { overflow-wrap: anywhere; }
+@media(max-width:767px) { .feed-video-stats { gap: 12px; } }
 .feed-player-notice, .feed-player-loading { position: absolute; z-index: 3; top: calc(50% + 46px); left: 14px; right: 14px; margin: 0; text-align: center; font-size: 12px; line-height: 1.7; pointer-events: none; text-shadow: 0 1px 4px #000; }
 .feed-player-error { position: absolute; z-index: 8; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; background: #111925ed; text-align: center; font-size: 14px; }
 .feed-player-error p { margin: 0; line-height: 1.7; }
