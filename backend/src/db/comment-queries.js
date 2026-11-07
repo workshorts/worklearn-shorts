@@ -1,10 +1,7 @@
 import { errors } from '../errors.js'
 
-// Callers validate the ID and own the snapshot shared with later comment page queries.
-export function assertCommentVideoExists(database, videoId) {
-  const video = database.prepare('SELECT id FROM videos WHERE id = ?').get(videoId)
-  if (video === undefined) throw errors.notFound('영상을 찾을 수 없습니다.')
-}
+// Preserve the existing comment-specific name while sharing the parent lookup with quizzes.
+export { assertVideoExists as assertCommentVideoExists } from './video-existence.js'
 
 // Return only public columns; callers own input validation and the shared read snapshot.
 export function loadCommentPage(database, { videoId, page, limit }) {

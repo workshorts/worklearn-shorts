@@ -2,12 +2,15 @@ import { Router } from 'express'
 import { getDb } from '../db/client.js'
 import { limitCommentCreateRequest } from '../middleware/commentRequestLimits.js'
 import { hashCommentPassword } from '../middleware/hashCommentPassword.js'
+import { loadQuizForVideo } from '../middleware/loadQuizForVideo.js'
 import { requireCommentVideo } from '../middleware/requireCommentVideo.js'
+import { requireQuizVideo } from '../middleware/requireQuizVideo.js'
 import { requireJson } from '../middleware/requireJson.js'
 import { validateCommentCreateRequest } from '../middleware/validateCommentCreateRequest.js'
 import { validateCommentListRequest } from '../middleware/validateCommentListRequest.js'
 import { validateVideoListRequest } from '../middleware/validateVideoListRequest.js'
 import { validateVideoLikeRequest } from '../middleware/validateVideoLikeRequest.js'
+import { validateVideoQuizRequest } from '../middleware/validateVideoQuizRequest.js'
 import { validateVideoViewRequest } from '../middleware/validateVideoViewRequest.js'
 import { createComment } from '../services/comment-create.js'
 import { loadCommentList } from '../services/comment-read.js'
@@ -18,6 +21,11 @@ import { parseResourceId } from '../utils/resource-id.js'
 import { readOptionalVisitorId } from '../utils/visitor-id.js'
 
 export const videosRouter = Router()
+
+// Send the public quiz only after its complete read snapshot commits.
+videosRouter.get('/:id/quiz', validateVideoQuizRequest, requireQuizVideo, loadQuizForVideo, (req, res) => {
+  res.json(res.locals.videoQuiz)
+})
 
 // Send public comments only after the shared read snapshot commits.
 videosRouter.get('/:id/comments', validateCommentListRequest, (req, res) => {
