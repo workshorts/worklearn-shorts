@@ -6,7 +6,7 @@ import FeedVideoActions from './FeedVideoActions.jsx'
 // 좋아요·조회수 상태를 영상 ID별로 관리한다.
 // - 좋아요: 누르는 즉시 화면에 반영하고, 서버 응답 값으로 맞춘다. 실패하면 되돌린다.
 // - 조회수: 영상별 누적 재생 10초가 되면 한 번 기록한다. 서버도 방문자당 한 번만 센다.
-export default function useVideoReactions({ onOpenComments } = {}) {
+export default function useVideoReactions({ onOpenComments, onOpenQuiz } = {}) {
   const [changes, setChanges] = useState({})   // id → { likeCount, likedByMe, viewCount }
   const [pending, setPending] = useState({})   // id → true (좋아요 요청 중)
   const [errors, setErrors] = useState({})     // id → 오류 문구
@@ -61,7 +61,7 @@ export default function useVideoReactions({ onOpenComments } = {}) {
   }, [patch, showError])
 
   const renderActions = useCallback((video) => <FeedVideoActions video={{ ...video, ...changes[video.id] }}
-    pending={!!pending[video.id]} error={errors[video.id]} onToggleLike={toggleLike} onOpenComments={onOpenComments} />, [changes, pending, errors, toggleLike, onOpenComments])
+    pending={!!pending[video.id]} error={errors[video.id]} onToggleLike={toggleLike} onOpenComments={onOpenComments} onOpenQuiz={onOpenQuiz} />, [changes, pending, errors, toggleLike, onOpenComments, onOpenQuiz])
   const updateCommentCount = useCallback((id, commentCount) => patch(id, { commentCount }), [patch])
 
   return { renderActions, handleWatched, updateCommentCount }
