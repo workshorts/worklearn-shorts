@@ -10,7 +10,7 @@ function Icon({ name, filled }) {
   return <span className="feed-stat-icon"><svg viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icons[name]}</svg></span>
 }
 
-export default function FeedVideoActions({ video, pending, error, onToggleLike }) {
+export default function FeedVideoActions({ video, pending, error, onToggleLike, onOpenComments }) {
   const liked = !!video.likedByMe
   return <div className="feed-video-stats">
     <div className="feed-stat">
@@ -21,7 +21,7 @@ export default function FeedVideoActions({ video, pending, error, onToggleLike }
       <span className="feed-stat-value" aria-hidden="true">{count(video.likeCount)}</span>
     </div>
     <div className="feed-stat">
-      <Icon name="comment" /><span className="feed-sr-only">댓글</span>
+      <button type="button" className="feed-like-button" aria-label={`댓글 열기, 현재 ${count(video.commentCount)}개`} onClick={() => onOpenComments?.(video)}><Icon name="comment" /></button>
       <span className="feed-stat-value">{count(video.commentCount)}</span>
     </div>
     <div className="feed-stat">
