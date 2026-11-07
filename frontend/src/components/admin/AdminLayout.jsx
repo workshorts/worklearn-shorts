@@ -6,6 +6,7 @@ import './admin.css'
 const menus = [
   { href: '/admin/videos', title: '영상 관리' },
   { href: '/admin/courses', title: '학습과정 관리' },
+  { href: '/admin/comments', title: '댓글 관리' },
 ]
 
 function Icon({ logout = false }) {

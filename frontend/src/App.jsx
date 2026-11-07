@@ -5,6 +5,7 @@ import AdminAccess from './components/admin/AdminAccess.jsx'
 import AdminVideos from './pages/admin/AdminVideos.jsx'
 import AdminVideoForm from './pages/admin/AdminVideoForm.jsx'
 import AdminCourses from './pages/admin/AdminCourses.jsx'
+import AdminComments from './pages/admin/AdminComments.jsx'
 import FeedScreen from './pages/learner/FeedScreen.jsx'
 import { CourseList, CourseScreen } from './pages/learner/CourseScreen.jsx'
 
@@ -41,10 +42,11 @@ export default function App() {
     const videos = pathname === '/admin/videos'
     const creating = pathname === '/admin/videos/new'
     const courses = pathname === '/admin/courses'
+    const comments = pathname === '/admin/comments'
     return (
       <AdminAccess navigate={navigate}>
-        <AdminLayout pathname={pathname} navigate={navigate} showHeading={!videos && !creating && !editing && !courses}>
-          {courses ? <AdminCourses navigate={navigate} /> : videos ? <AdminVideos navigate={navigate} /> : creating || editing ? <AdminVideoForm key={pathname} id={editing ? Number(editing[1]) : undefined} navigate={navigate} /> : <section className="admin-placeholder" aria-label="페이지 준비 안내">
+        <AdminLayout pathname={pathname} navigate={navigate} showHeading={!videos && !creating && !editing && !courses && !comments}>
+          {comments ? <AdminComments navigate={navigate} /> : courses ? <AdminCourses navigate={navigate} /> : videos ? <AdminVideos navigate={navigate} /> : creating || editing ? <AdminVideoForm key={pathname} id={editing ? Number(editing[1]) : undefined} navigate={navigate} /> : <section className="admin-placeholder" aria-label="페이지 준비 안내">
             <p>페이지를 찾을 수 없습니다.</p>
           </section>}
         </AdminLayout>
